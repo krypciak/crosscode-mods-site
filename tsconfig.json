@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+        "target": "es2023",
+        "module": "esnext",
+        "lib": [
+            "ES2023",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "types": [
+            "vite/client",
+            "bun",
+            "node"
+        ],
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "moduleDetection": "force",
+        "allowJs": true,
+        "noEmit": true,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "verbatimModuleSyntax": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "experimentalDecorators": true,
+        "resolveJsonModule": true,
+        "noUncheckedSideEffectImports": true,
+        "allowImportingTsExtensions": false,
+        "noFallthroughCasesInSwitch": true,
+    },
+    "include": [
+        "src"
+    ]
+}
