@@ -6,8 +6,8 @@ Bun.serve({
     hostname: '127.0.0.1',
     async fetch(req) {
         const pathname = new URL(req.url).pathname
-        if (req.method == 'POST' || pathname == '/access_token') return handleAccessToken(req)
-
+        if (req.method == 'POST' && pathname == '/access_token') return handleAccessToken(req)
+        if (req.method == 'GET' && pathname == '/gh') return handleGithubDownload(req)
         return new Response('Not Found', { status: 404 })
     },
 })
@@ -31,4 +31,8 @@ async function handleAccessToken(req: Request) {
         status: upstream.status,
         headers: { 'Content-Type': upstream.headers.get('content-type') ?? 'application/json' },
     })
+}
+
+async function handleGithubDownload(req: Request) {
+    return new Response()
 }

@@ -25,3 +25,4 @@ dist-ssr
 
 secret.conf
 .env
+nginx/tmp
