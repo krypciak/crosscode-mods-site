@@ -149,6 +149,19 @@ a:hover {
     text-decoration: underline;
 }
 
+.github-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+#githubAvatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+
 .console-section {
     flex: 1;
     display: flex;

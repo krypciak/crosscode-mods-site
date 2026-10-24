@@ -1,6 +1,5 @@
-import type { Endpoints } from '@octokit/types'
 import { githubClientId } from './config'
-import { setOAuthState, setPkceChallenge, takePkceVerifier, verifyOAuthState } from './oauth-security'
+import { takePkceVerifier, verifyOAuthState } from './oauth-security'
 
 interface GithubTokenRequestSuccess {
     access_token: string
@@ -17,24 +16,7 @@ export type GithubTokenRequest =
       }
     | GithubTokenRequestSuccess
 
-export type GithubUserInfo = Endpoints['GET /user']['response']['data']
-
 type StoredAuthData = { acquiredAt: number } & GithubTokenRequestSuccess
-
-export async function fetchUserInfo(token: string): Promise<GithubUserInfo> {
-    const resp = await fetch('https://api.github.com/user', {
-        method: 'GET',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
-    })
-    if (!resp.ok) throw new Error(resp.status + ' ' + resp.statusText)
-
-    const json = await resp.json()
-    return json
-}
 
 async function requestAccessTokenAndStore(
     config: { code: string; code_verifier: string } | { refresh_token: string }
@@ -115,35 +97,12 @@ export async function getGithubToken(): Promise<string | undefined> {
     }
 }
 
-export async function updateGithubLinks() {
-    const githubLoginLogoutLink = document.getElementById('githubLoginLogoutLink') as HTMLLinkElement
-
-    const loggedIn = await isLoggedIn()
-
-    if (loggedIn) {
-        githubLoginLogoutLink.innerHTML = 'Logout'
-        githubLoginLogoutLink.href = '#'
-        githubLoginLogoutLink.onclick = event => {
-            event.preventDefault()
-            logoutGithub()
-            void updateGithubLinks()
-        }
-    } else {
-        const state = setOAuthState()
-        const codeChallenge = await setPkceChallenge()
-
-        githubLoginLogoutLink.href =
-            `https://github.com/login/oauth/authorize` +
-            `?client_id=${githubClientId}` +
-            `&state=${state}` +
-            `&code_challenge=${codeChallenge}` +
-            `&code_challenge_method=S256`
-    }
-}
-
 export async function isLoggedIn() {
     return (await getAuthData()) !== undefined
 }
-function logoutGithub() {
-    localStorage.removeItem(authStorageKey)
+
+export const onLogout: (() => void)[] = []
+
+export function logoutGithub() {
+    for (const func of onLogout) func()
 }
