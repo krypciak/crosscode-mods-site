@@ -26,3 +26,31 @@ export function verifyOAuthState(params: URLSearchParams) {
 }
 
 /* pkce */
+const verifierSessionKey = 'oauth_code_verifier'
+
+function base64UrlEncode(bytes: Uint8Array): string {
+    let str = ''
+    for (const byte of bytes) str += String.fromCharCode(byte)
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+export async function setPkceChallenge(): Promise<string> {
+    const verifierBytes = new Uint8Array(32)
+    crypto.getRandomValues(verifierBytes)
+    const verifier = base64UrlEncode(verifierBytes)
+
+    sessionStorage.setItem(verifierSessionKey, verifier)
+
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
+    return base64UrlEncode(new Uint8Array(digest))
+}
+
+/** consumes the stored verifier (single use) */
+export function takePkceVerifier(): string {
+    const verifier = sessionStorage.getItem(verifierSessionKey)
+    sessionStorage.removeItem(verifierSessionKey)
+    if (!verifier) {
+        throw new Error('missing PKCE code_verifier (no login flow started in this tab?)')
+    }
+    return verifier
+}

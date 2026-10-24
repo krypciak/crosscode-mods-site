@@ -1,6 +1,6 @@
 import type { Endpoints } from '@octokit/types'
 import { githubClientId } from './config'
-import { setOAuthState, verifyOAuthState } from './oauth-security'
+import { setOAuthState, setPkceChallenge, takePkceVerifier, verifyOAuthState } from './oauth-security'
 
 interface GithubTokenRequestSuccess {
     access_token: string
@@ -37,12 +37,12 @@ export async function fetchUserInfo(token: string): Promise<GithubUserInfo> {
 }
 
 async function requestAccessTokenAndStore(
-    config: { code: string } | { refresh_token: string }
+    config: { code: string; code_verifier: string } | { refresh_token: string }
 ): Promise<GithubTokenRequestSuccess> {
     const body = new URLSearchParams({
         client_id: githubClientId,
         ...('code' in config
-            ? { code: config.code }
+            ? { code: config.code, code_verifier: config.code_verifier }
             : { grant_type: 'refresh_token', refresh_token: config.refresh_token }),
     })
 
@@ -77,8 +77,9 @@ export async function checkForGithubCallback() {
         verifyOAuthState(params)
 
         const code = params.get('code')!
+        const codeVerifier = takePkceVerifier()
 
-        await requestAccessTokenAndStore({ code })
+        await requestAccessTokenAndStore({ code, code_verifier: codeVerifier })
 
         window.location.href = '/'
     } else if (params.get('error')) {
@@ -114,10 +115,16 @@ export async function getGithubToken(): Promise<string | undefined> {
     }
 }
 
-export function updateGithubLoginLink() {
+export async function updateGithubLinks() {
     const githubLoginLink = document.getElementById('githubLoginLink') as HTMLLinkElement
 
     const state = setOAuthState()
+    const codeChallenge = await setPkceChallenge()
 
-    githubLoginLink.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&state=${state}`
+    githubLoginLink.href =
+        `https://github.com/login/oauth/authorize` +
+        `?client_id=${githubClientId}` +
+        `&state=${state}` +
+        `&code_challenge=${codeChallenge}` +
+        `&code_challenge_method=S256`
 }
