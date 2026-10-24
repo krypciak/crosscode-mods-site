@@ -9,7 +9,42 @@
     <body>
         <main id="app">
             <!--shared-header-->
-            <span>publish mod</span>
+            <section class="form-section">
+                <h1>Publish mod</h1>
+                <span id="loginNotice" hidden="true">You must login first to submit a mod</span>
+
+                <form id="publishForm">
+                    <div class="form-row">
+                        <div class="grow">
+                            <label for="modUrl">mod url</label>
+                            <input
+                                type="text"
+                                id="modUrl"
+                                placeholder="https://github.com/CCDirectLink/CCModManager/releases/download/v1.2.1/ccmodmanager-1.2.1.ccmod"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="grow">
+                            <label for="branch">branch</label>
+                            <select id="branch"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="grow">
+                            <label for="source">source (optional)</label>
+                            <input type="text" id="source" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <button type="submit">Publish</button>
+                    </div>
+                </form>
+            </section>
+            <section class="console-section">
+                <div class="log" id="log"></div>
+            </section>
         </main>
         <!--shared-speculationrules-->
         <script type="module" src="/src/pages/publish-mod.ts"></script>

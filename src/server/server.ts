@@ -8,6 +8,8 @@ Bun.serve({
         const pathname = new URL(req.url).pathname
         if (req.method == 'POST' && pathname == '/access_token') return handleAccessToken(req)
         if (req.method == 'GET' && pathname == '/gh') return handleGithubDownload(req)
+        if (req.method == 'POST' && pathname == '/mod-publish-request') return handleModPublishRequest(req)
+
         return new Response('Not Found', { status: 404 })
     },
 })
@@ -72,4 +74,13 @@ async function handleGithubDownload(req: Request) {
         const message = (e as Error).message
         return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
     }
+}
+
+// required request parameters:
+// github access token
+// mod url
+// branch
+// source
+async function handleModPublishRequest(req: Request) {
+    return new Response()
 }

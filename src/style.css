@@ -262,6 +262,14 @@ label {
     margin: 0.25em 0 0;
 }
 
+/* rows inside a form are stacked like the section itself; the section's gap
+   only applies to its direct children, so give forms the same rhythm */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .form-row {
     display: flex;
     gap: 10px;
@@ -298,6 +306,11 @@ select {
     border-radius: 2px;
     background: var(--field-background);
     cursor: pointer;
+}
+
+/* stacked form rows: select fills the row like the text inputs above it */
+.form-row .grow select {
+    width: 100%;
 }
 
 button {
