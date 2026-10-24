@@ -24,6 +24,7 @@ async function htmlPartials(): Promise<Plugin> {
 export default defineConfig({
     plugins: [await htmlPartials()],
     root: './src/pages',
+    publicDir: '../../public',
     build: {
         outDir: '../../dist',
         emptyOutDir: true,
