@@ -28,6 +28,7 @@ export default defineConfig({
             input: {
                 mods: fileURLToPath(new URL('./index.html', import.meta.url)),
                 'publish-mod': fileURLToPath(new URL('./publish-mod.html', import.meta.url)),
+                'check-mod': fileURLToPath(new URL('./check-mod.html', import.meta.url)),
             },
         },
     },
