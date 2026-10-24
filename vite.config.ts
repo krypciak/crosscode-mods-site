@@ -23,12 +23,15 @@ async function htmlPartials(): Promise<Plugin> {
 // (dev serves any root .html automatically; this is needed for `vite build`)
 export default defineConfig({
     plugins: [await htmlPartials()],
+    root: './src/pages',
     build: {
+        outDir: '../../dist',
+        emptyOutDir: true,
         rollupOptions: {
             input: {
-                mods: fileURLToPath(new URL('./index.html', import.meta.url)),
-                'publish-mod': fileURLToPath(new URL('./publish-mod.html', import.meta.url)),
-                'check-mod': fileURLToPath(new URL('./check-mod.html', import.meta.url)),
+                mods: fileURLToPath(new URL('./src/pages/index.html', import.meta.url)),
+                'publish-mod': fileURLToPath(new URL('./src/pages/publish-mod.html', import.meta.url)),
+                'check-mod': fileURLToPath(new URL('./src/pages/check-mod.html', import.meta.url)),
             },
         },
     },

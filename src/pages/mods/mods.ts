@@ -1,2 +1,2 @@
-import '../main'
+import '../../main'
 console.log('mods!')

@@ -1,6 +1,6 @@
-import '../main'
-import { getGithubToken } from '../auth'
-import { allowedBranches } from '../config'
+import '../../main'
+import { getGithubToken } from '../../auth'
+import { allowedBranches } from '../../config'
 
 const form = document.getElementById('publishForm') as HTMLFormElement
 const urlInput = document.getElementById('modUrl') as HTMLInputElement

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Check ccmod.json</title>
+        <meta name="darkreader-lock" />
+    </head>
+    <body>
+        <main id="app">
+            <!--shared-header-->
+            <select id="db-select">
+                <option value="stable">stable</option>
+                <option value="testing">testing</option>
+            </select>
+            <button id="upload-btn">upload .zip / .ccmod</button>
+
+            <input type="file" id="file-input" accept=".zip,.ccmod,.json" hidden />
+
+            <label>ccmod.json (input)</label>
+            <div class="panels">
+                <section class="panel">
+                    <div id="input-code" class="editor-mount"></div>
+                </section>
+            </div>
+
+            <section class="console-section">
+                <label>console</label>
+                <div id="console-output" class="editor-mount"></div>
+            </section>
+        </main>
+        <!--shared-speculationrules-->
+        <script type="module" src="./check-mod/check-mod.ts"></script>
+    </body>
+</html>
