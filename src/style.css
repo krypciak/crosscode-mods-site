@@ -1,195 +1,55 @@
 :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #16171d;
+  --border: #2e303a;
+  --code-bg: #1f2028;
+  --accent: #c084fc;
+  --accent-bg: rgba(192, 132, 252, 0.15);
+  --accent-border: rgba(192, 132, 252, 0.5);
 
-    --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-    --mono: ui-monospace, Consolas, monospace;
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
 
-    font: 16px/145% var(--sans);
-    color-scheme: dark;
-    color: var(--text);
-    background: var(--bg);
+  font: 16px/145% var(--sans);
+  color-scheme: dark;
+  color: var(--text);
+  background: var(--bg);
 }
 
 body {
-    margin: 0;
+  margin: 0;
 }
 
 #app {
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    padding: 0 14px;
-}
-
-header {
-    flex: 0 0 auto;
-    padding: 10px 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    border-bottom: 1px solid var(--border);
-}
-
-header label {
-    margin: 0;
-    font-size: 18px;
-    color: var(--text-h);
-    font-weight: 600;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.login-status {
-    font-size: 14px;
-}
-
-label {
-    display: block;
-    font-weight: 600;
-    color: var(--text-h);
-    margin-bottom: 2px;
-    font-size: 12px;
-}
-
-.form-section {
-    padding: 14px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.form-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-}
-
-.form-row .grow {
-    flex: 1;
-}
-
-input[type='text'] {
-    width: 100%;
-    box-sizing: border-box;
-    font-family: var(--mono);
-    font-size: 14px;
-    padding: 5px 10px;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    background: var(--code-bg);
-    color: var(--text-h);
-}
-
-input[type='text']:focus {
-    outline: 1px solid var(--accent-border);
-}
-
-select {
-    height: 28px;
-    padding: 0 12px;
-    font-family: var(--sans);
-    font-size: 14px;
-    border: 1px solid var(--accent-border);
-    border-radius: 3px;
-    background: var(--code-bg);
-    color: var(--accent);
-    cursor: pointer;
-}
-
-button {
-    font-family: var(--sans);
-    font-size: 14px;
-    padding: 5px 14px;
-    white-space: nowrap;
-    border: 1px solid var(--accent-border);
-    border-radius: 3px;
-    background: var(--accent-bg);
-    color: var(--accent);
-    cursor: pointer;
-}
-
-button:hover {
-    background: var(--accent);
-    color: var(--bg);
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
-
-.hint {
-    font-size: 12px;
-    margin: 0;
-    color: var(--text);
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 0 14px;
 }
 
 a {
-    color: var(--accent);
-    text-decoration: none;
+  color: var(--accent);
+  text-decoration: none;
 }
 
 a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .github-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
 }
 
 #githubAvatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-}
-
-.console-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    border-top: 1px solid var(--border);
-    padding-top: 10px;
-}
-
-.log {
-    flex: 1;
-    margin: 0;
-    padding: 8px;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    background: var(--code-bg);
-    font-family: var(--mono);
-    font-size: 12px;
-    white-space: pre-wrap;
-    word-break: break-all;
-    overflow-y: auto;
-    min-height: 120px;
-}
-
-.log .err {
-    color: #e06c75;
-}
-
-.log .ok {
-    color: #98c379;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
 }
