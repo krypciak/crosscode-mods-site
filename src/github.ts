@@ -116,15 +116,34 @@ export async function getGithubToken(): Promise<string | undefined> {
 }
 
 export async function updateGithubLinks() {
-    const githubLoginLink = document.getElementById('githubLoginLink') as HTMLLinkElement
+    const githubLoginLogoutLink = document.getElementById('githubLoginLogoutLink') as HTMLLinkElement
 
-    const state = setOAuthState()
-    const codeChallenge = await setPkceChallenge()
+    const loggedIn = await isLoggedIn()
 
-    githubLoginLink.href =
-        `https://github.com/login/oauth/authorize` +
-        `?client_id=${githubClientId}` +
-        `&state=${state}` +
-        `&code_challenge=${codeChallenge}` +
-        `&code_challenge_method=S256`
+    if (loggedIn) {
+        githubLoginLogoutLink.innerHTML = 'Logout'
+        githubLoginLogoutLink.href = '#'
+        githubLoginLogoutLink.onclick = event => {
+            event.preventDefault()
+            logoutGithub()
+            void updateGithubLinks()
+        }
+    } else {
+        const state = setOAuthState()
+        const codeChallenge = await setPkceChallenge()
+
+        githubLoginLogoutLink.href =
+            `https://github.com/login/oauth/authorize` +
+            `?client_id=${githubClientId}` +
+            `&state=${state}` +
+            `&code_challenge=${codeChallenge}` +
+            `&code_challenge_method=S256`
+    }
+}
+
+export async function isLoggedIn() {
+    return (await getAuthData()) !== undefined
+}
+function logoutGithub() {
+    localStorage.removeItem(authStorageKey)
 }
