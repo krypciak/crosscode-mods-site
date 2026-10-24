@@ -23,7 +23,11 @@ const userCacheKey = 'github_user'
 function getCachedUserInfo(): GithubUserInfo | undefined {
     const str = localStorage.getItem(userCacheKey)
     if (!str) return
-    return JSON.parse(str) as GithubUserInfo
+    try {
+        return JSON.parse(str) as GithubUserInfo
+    } catch (e) {
+        console.error(e)
+    }
 }
 
 export async function getUserInfo(token: string): Promise<GithubUserInfo | undefined> {

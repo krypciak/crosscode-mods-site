@@ -49,28 +49,36 @@ async function storeAuthData(tokenData: StoredAuthData) {
 async function getAuthData(): Promise<StoredAuthData | undefined> {
     const str = localStorage.getItem(authStorageKey)
     if (!str) return
-    return JSON.parse(str) as StoredAuthData
+    try {
+        return JSON.parse(str) as StoredAuthData
+    } catch (e) {
+        console.error(e)
+    }
 }
 
 export async function checkForGithubCallback() {
-    const params = new URLSearchParams(window.location.search)
+    try {
+        const params = new URLSearchParams(window.location.search)
 
-    if (params.get('code')) {
-        verifyOAuthState(params)
+        if (params.get('code')) {
+            verifyOAuthState(params)
 
-        const code = params.get('code')!
-        const codeVerifier = takePkceVerifier()
+            const code = params.get('code')!
+            const codeVerifier = takePkceVerifier()
 
-        await requestAccessTokenAndStore({ code, code_verifier: codeVerifier })
+            await requestAccessTokenAndStore({ code, code_verifier: codeVerifier })
 
-        window.location.href = '/'
-    } else if (params.get('error')) {
-        verifyOAuthState(params)
+            window.location.href = '/'
+        } else if (params.get('error')) {
+            verifyOAuthState(params)
 
-        const error = params.get('error')
-        const errorDescription = params.get('error_description')
-        console.error(error, errorDescription)
-        throw new Error(error + ' ' + errorDescription)
+            const error = params.get('error')
+            const errorDescription = params.get('error_description')
+            console.error(error, errorDescription)
+            throw new Error(error + ' ' + errorDescription)
+        }
+    } catch (e) {
+        console.error(e)
     }
 }
 
@@ -92,6 +100,8 @@ export async function getGithubToken(): Promise<string | undefined> {
         refreshPromise ??= requestAccessTokenAndStore({ refresh_token: data.refresh_token })
         const res = await refreshPromise
         return res.access_token
+    } catch (e) {
+        console.error(e)
     } finally {
         refreshPromise = undefined
     }
