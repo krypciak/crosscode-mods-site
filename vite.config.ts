@@ -26,6 +26,7 @@ export default defineConfig({
     root: './src/pages',
     publicDir: '../../public',
     build: {
+        minify: false,
         outDir: '../../dist',
         emptyOutDir: true,
         rollupOptions: {
