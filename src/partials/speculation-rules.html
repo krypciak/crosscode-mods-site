@@ -1,0 +1,15 @@
+<!--
+    prefetch the site's other pages so cross-document view transitions feel
+    instant. shared partial, injected by the vite config.
+-->
+<script type="speculationrules">
+    {
+        "prefetch": [
+            {
+                "source": "document",
+                "where": { "href_matches": "/*.html?*" },
+                "eagerness": "moderate"
+            }
+        ]
+    }
+</script>

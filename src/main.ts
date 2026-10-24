@@ -1,7 +1,7 @@
 import './style.css'
 import { checkForGithubCallback } from './auth'
-import { updateGithubUiElements } from './ui'
+import { updateActiveNavLink, updateGithubUiElements } from './ui'
 
-// catch errors!
+updateActiveNavLink()
 await checkForGithubCallback()
 await updateGithubUiElements()

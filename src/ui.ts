@@ -9,6 +9,15 @@ const githubLoginLogoutLink = document.getElementById('githubLoginLogoutLink') a
 const githubUsername = document.getElementById('githubUsername') as HTMLSpanElement
 const githubAvatar = document.getElementById('githubAvatar') as HTMLImageElement
 
+export function updateActiveNavLink() {
+    const here = location.pathname == '/index.html' ? '/' : location.pathname
+    for (const a of document.querySelectorAll<HTMLAnchorElement>('.page-nav a')) {
+        const href = new URL(a.getAttribute('href') ?? '.', location.origin).pathname
+        if (href == here) a.setAttribute('aria-current', 'page')
+        else a.removeAttribute('aria-current')
+    }
+}
+
 export async function updateGithubUiElements() {
     const token = await getGithubToken()
     const loggedIn = !!token && (await isLoggedIn())

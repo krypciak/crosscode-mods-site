@@ -4,6 +4,44 @@
  * links that fill on hover, flat fill-on-hover buttons, thin scrollbar
  */
 
+/* cross-document view transitions: opt in the whole site, one shared stylesheet */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+
+    /* page content: quick fade-out, slow-in new page (default ua crossfade is fine too, this is snappier) */
+    ::view-transition-old(root) {
+        animation: 120ms cubic-bezier(0.4, 0, 1, 1) both vt-page-fade-out;
+    }
+
+    ::view-transition-new(root) {
+        animation: 200ms 60ms cubic-bezier(0, 0, 0.2, 1) both vt-page-fade-in;
+    }
+
+    /* named groups morph position/size between pages and stay visually static;
+       they are excluded from the root snapshot, so the header doesn't blink */
+    ::view-transition-old(github-user),
+    ::view-transition-new(github-user),
+    ::view-transition-old(page-nav),
+    ::view-transition-new(page-nav) {
+        animation: none;
+    }
+}
+
+@keyframes vt-page-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes vt-page-fade-in {
+    from {
+        opacity: 0;
+        translate: 0 6px;
+    }
+}
+
 :root {
     /* colorset: light */
     --base-color: rgb(25, 25, 25);
@@ -19,15 +57,10 @@
     --separator: rgba(25, 25, 25, 0.2);
     --field-background: rgba(25, 25, 25, 0.05);
 
-    --card-shadow:
-        0 2px 2px 0 rgba(0, 0, 0, 0.14),
-        0 3px 1px -2px rgba(0, 0, 0, 0.2),
-        0 1px 5px 0 rgba(0, 0, 0, 0.12);
+    --card-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
 
     --card-hover-shadow:
-        0 8px 10px 1px rgba(0, 0, 0, 0.14),
-        0 3px 14px 2px rgba(0, 0, 0, 0.12),
-        0 5px 5px -3px rgba(0, 0, 0, 0.2);
+        0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
 
     --selection-background: rgba(125, 185, 215, 0.5);
 
@@ -56,13 +89,11 @@
         --field-background: rgba(210, 210, 220, 0.08);
 
         --card-shadow:
-            0 2px 2px 0 rgba(125, 185, 215, 0.14),
-            0 3px 1px -2px rgba(125, 185, 215, 0.2),
+            0 2px 2px 0 rgba(125, 185, 215, 0.14), 0 3px 1px -2px rgba(125, 185, 215, 0.2),
             0 1px 5px 0 rgba(125, 185, 215, 0.12);
 
         --card-hover-shadow:
-            0 8px 10px 1px rgba(125, 185, 215, 0.14),
-            0 3px 14px 2px rgba(125, 185, 215, 0.12),
+            0 8px 10px 1px rgba(125, 185, 215, 0.14), 0 3px 14px 2px rgba(125, 185, 215, 0.12),
             0 5px 5px -3px rgba(125, 185, 215, 0.2);
 
         --selection-background: rgba(125, 185, 215, 0.5);
@@ -122,10 +153,39 @@ body {
 /* gradient header bar -- same silhouette as c2dl: full width, glow shadow */
 header {
     flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
     padding: 0.5em 1em;
     background: var(--header-background);
     box-shadow: var(--card-shadow);
     color: var(--header-color);
+}
+
+/* in-place morphing parts of the header (same markup on every page):
+   naming them lifts them out of the root page snapshot, so they don't
+   crossfade with the page content but animate between their layouts */
+.page-nav {
+    view-transition-name: page-nav;
+    display: flex;
+    gap: 0.25em;
+}
+
+.github-user {
+    view-transition-name: github-user;
+}
+
+.page-nav a {
+    font-weight: 500;
+    padding: 0.25em 0.75em;
+    border-radius: 2px;
+    text-decoration: none;
+}
+
+.page-nav a[aria-current='page'] {
+    color: var(--link-hover-color);
+    background: var(--link-color);
 }
 
 .github-user {
@@ -194,6 +254,12 @@ label {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.form-section h1 {
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0.25em 0 0;
 }
 
 .form-row {
