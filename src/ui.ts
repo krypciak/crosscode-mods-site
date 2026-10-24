@@ -1,6 +1,6 @@
 import { githubClientId } from './config'
 import { getGithubToken, isLoggedIn, logoutGithub } from './auth'
-import { setOAuthState, setPkceChallenge } from './oauth-security'
+import { setOAuthState, setPkceChallenge } from './auth-security'
 import { getUserInfo, type GithubUserInfo } from './user-info'
 
 let defaultAvatarDataUri: string

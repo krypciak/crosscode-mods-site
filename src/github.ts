@@ -1,5 +1,5 @@
 import { githubClientId } from './config'
-import { takePkceVerifier, verifyOAuthState } from './oauth-security'
+import { takePkceVerifier, verifyOAuthState } from './auth-security'
 
 interface GithubTokenRequestSuccess {
     access_token: string
