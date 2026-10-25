@@ -164,8 +164,12 @@ export class Console {
         })
     }
 
-    append(...args: any[]) {
-        const line = args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ') + '\n'
+    append(level: '[info]' | '[warn]' | '[error]', ...args: any[]) {
+        const line =
+            level +
+            ' ' +
+            args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ') +
+            '\n'
         const from = this.editor.view.state.doc.length
         const segments = parseAnsi(line)
         const insert = segments.map(s => s.text).join('')
@@ -199,7 +203,7 @@ export class Console {
         const origError = console.error
         console.log = (...args: any[]) => {
             origLog(...args)
-            this.append('[log]', ...args)
+            this.append('[info]', ...args)
         }
         console.warn = (...args: any[]) => {
             origWarn(...args)
@@ -210,7 +214,11 @@ export class Console {
             this.append('[error]', ...args)
         }
 
-        window.addEventListener('error', e => this.append('[exception]', e.message))
-        window.addEventListener('unhandledrejection', e => this.append('[unhandled promise]', String(e.reason)))
+        window.addEventListener('error', e => this.append('[error]', '[exception]', e.message))
+        window.addEventListener('unhandledrejection', e =>
+            this.append('[error]', '[unhandled promise]', String(e.reason))
+        )
     }
 }
+
+export const checkSymbol = '\x1b[31m\u2717'

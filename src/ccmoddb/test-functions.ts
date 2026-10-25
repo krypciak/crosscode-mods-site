@@ -3,15 +3,15 @@ import type { CCModChecker } from 'ccmoddb/build/tests/ccmod-check'
 const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
 const DIM = '\x1b[2m'
-const RED = '\x1b[31m'
-const GREEN = '\x1b[32m'
+export const RED = '\x1b[31m'
+export const GREEN = '\x1b[32m'
 
 function c(code: string, text: string): string {
     return code + text + RESET
 }
 
-const PASS_SYM = '\u2713'
-const FAIL_SYM = '\u2717'
+export const PASS_SYM = c(GREEN, '\u2713')
+export const FAIL_SYM = c(RED, '\u2717')
 
 function print(str: string) {
     console.log(str)
@@ -28,7 +28,7 @@ export const test: ConstructorParameters<typeof CCModChecker>[1] = (name, func) 
             errorMessage ??= e.message
         }
     } finally {
-        print(`  ${success ? c(GREEN, PASS_SYM) : c(RED, FAIL_SYM)} ${name}${c(DIM, ' >')}${c(BOLD, ` ${name}`)}`)
+        print(`  ${success ? PASS_SYM : FAIL_SYM} ${name}${c(DIM, ' >')}${c(BOLD, ` ${name}`)}`)
         if (errorMessage) {
             print(`${errorMessage}`)
         }

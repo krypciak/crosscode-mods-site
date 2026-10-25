@@ -157,6 +157,7 @@ label {
     font-weight: 500;
     margin-bottom: 2px;
     font-size: 18px;
+    margin: 0;
 }
 
 form {
@@ -167,6 +168,11 @@ form {
 }
 
 /* publish-mod.html */
+#show-only-when-logged-in {
+    display: flex;
+    flex-direction: column;
+}
+
 #publish-form {
     display: flex;
     flex-direction: column;
@@ -183,11 +189,6 @@ form {
 .form-row.grow input {
     flex: 1;
     min-width: 0;
-}
-
-.form-row.grow label {
-    line-height: normal;
-    margin: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

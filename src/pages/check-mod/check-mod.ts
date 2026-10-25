@@ -2,9 +2,9 @@ import '../../main'
 import type { PackageDB, PkgCCMod } from 'ccmoddb/build/src/types'
 import { branches } from '../../ccmoddb/branch'
 import { CCModChecker } from 'ccmoddb/build/tests/ccmod-check'
-import { expect, test } from '../../ccmoddb/test-functions'
+import { expect, FAIL_SYM, test } from '../../ccmoddb/test-functions'
 import { dbSelect, Editor, Console, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
-import { extractCCMod, type ExtractCcmodError } from '../../ccmoddb/zip'
+import { extractCCMod } from '../../ccmoddb/zip'
 
 const consoleMount = document.getElementById('console-output') as HTMLDivElement
 const inputMount = document.getElementById('input-code') as HTMLDivElement
@@ -22,30 +22,28 @@ const inputEditor = new Editor({
 const con = new Console(consoleMount)
 con.hookWindowConsole()
 
-const EXTRACT_ERROR_MESSAGES: Record<ExtractCcmodError, string> = {
-    'ccmod-json-not-found': 'no ccmod.json found',
-    'ccmod-json-not-at-top-level': 'ccmod.json must be at the top level of the archive',
-}
-
 uploadBtn.addEventListener('click', () => fileInput.click())
 fileInput.addEventListener('change', async () => {
     const file = fileInput.files?.[0]
     if (!file) return
     fileInput.value = ''
-    const data = new Uint8Array(await file.arrayBuffer())
+    const modArchive = new Uint8Array(await file.arrayBuffer())
 
     if (file.name.endsWith('.zip') || file.name.endsWith('.ccmod')) {
         const isCCMod = file.name.endsWith('.ccmod')
-        const result = extractCCMod(data, isCCMod)
-        if (!result.ok) {
-            con.append(`[ui] \x1b[31m\u2717 ${EXTRACT_ERROR_MESSAGES[result.error]} in ${file.name}\x1b[0m`)
-            return
+
+        try {
+            const ccmod = extractCCMod(modArchive, isCCMod)
+            inputEditor.setText(ccmod.text)
+            con.append('[info]', `loaded ${file.name} (${file.size} bytes): ${ccmod.path}`)
+        } catch (e) {
+            const errorMsg =
+                typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
+            con.append('[error]', `${FAIL_SYM} ${errorMsg} in ${file.name}`)
         }
-        inputEditor.setText(result.ccmod.text)
-        con.append(`[ui] loaded ${file.name} (${file.size} bytes): ${result.ccmod.path}`)
     } else {
-        inputEditor.setText(new TextDecoder().decode(data))
-        con.append(`[ui] loaded ${file.name} (${file.size} bytes)`)
+        inputEditor.setText(new TextDecoder().decode(modArchive))
+        con.append('[info]', `loaded ${file.name} (${file.size} bytes)`)
     }
 })
 
@@ -61,7 +59,7 @@ async function getDatabases(dbName: string): Promise<PackageDB[]> {
 
 export async function runModCheck(con: Console, input: string) {
     if (!input) {
-        con.append('[ui] no input provided')
+        con.append('[error]', 'no input provided')
         return
     }
 
@@ -69,13 +67,13 @@ export async function runModCheck(con: Console, input: string) {
     try {
         ccmod = JSON.parse(input) as PkgCCMod
     } catch (e) {
-        con.append('[ui] invalid JSON:', (e as Error).message)
+        con.append('[error]', 'invalid JSON:', (e as Error).message)
         return
     }
     con.clear()
     const databases = await getDatabases(getCurrentlySelectedDbName())
     const ccmodChecker = new CCModChecker(databases, test, expect)
-    con.append(`[ui] running (${new Date().toLocaleString()})...`)
+    con.append('[info]', `running (${new Date().toLocaleString()})...`)
     ccmodChecker.testMetadataCCMod(ccmod)
-    con.append('[ui] done')
+    con.append('[info]', 'done')
 }

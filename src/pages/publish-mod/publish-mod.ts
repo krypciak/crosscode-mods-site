@@ -1,14 +1,19 @@
 import '../../main'
 import { addLogoutListener, getGithubToken, isLoggedIn } from '../../auth'
 import { Console, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
+import { githubAssetDownload } from '../../github-download'
+import { extractCCMod, type ExtractedCcmod } from '../../ccmoddb/zip'
 
-const form = document.getElementById('publish-form') as HTMLFormElement
-const urlInput = document.getElementById('modUrl') as HTMLInputElement
+const loggedInDiv = document.getElementById('show-only-when-logged-in') as HTMLDivElement
+const urlInput = document.getElementById('mod-url') as HTMLInputElement
 const sourceInput = document.getElementById('source') as HTMLInputElement
 const consoleMount = document.getElementById('console-output') as HTMLDivElement
 
+const checkButton = document.getElementById('check-button') as HTMLButtonElement
+const publishButton = document.getElementById('publish-button') as HTMLButtonElement
+
 fillDbSelectWithOptions()
-hookFormSubmit()
+hookButtons()
 
 updateFormVisibility()
 addLogoutListener(() => updateFormVisibility())
@@ -21,29 +26,53 @@ async function updateFormVisibility() {
 
     const notice = document.getElementById('login-notice') as HTMLHeadingElement
     notice.hidden = loggedIn
-    form.hidden = !loggedIn
+    loggedInDiv.hidden = !loggedIn
 }
 
-function hookFormSubmit() {
-    form.onsubmit = async event => {
-        event.preventDefault()
+async function check(): Promise<boolean> {
+    const modUrl = urlInput.value.trim()
+    const branch = getCurrentlySelectedDbName()
+    const source = sourceInput.value.trim()
+    if (!modUrl) return false
 
-        const modUrl = urlInput.value.trim()
-        const branch = getCurrentlySelectedDbName()
-        const source = sourceInput.value.trim()
-        if (!modUrl) return
+    con.clear()
+    con.append('[info]', 'downloading', `"${modUrl}"`)
+    let modArchive: Uint8Array
+    try {
+        new URL(modUrl)
+        modArchive = await githubAssetDownload(modUrl)
+    } catch (e) {
+        con.append('[error]', 'invalid url!', e)
+        return false
+    }
+    con.append('[info]', 'downloaded')
 
+    const isCCMod = modUrl.endsWith('.ccmod')
+    let result: ExtractedCcmod
+    try {
+        result = extractCCMod(modArchive, isCCMod)
+    } catch (e) {}
+
+    return true
+}
+
+function hookButtons() {
+    checkButton.onclick = async () => {
+        await check()
+
+        // const isOk = await verifyModPublishRequest({ githubAccessToken: token, modUrl, branch, source })
+        // if (!isOk) return
+        //
+        // const requestBody = { githubAccessToken: token, modUrl, branch, source }
+        // await submit(requestBody)
+    }
+
+    publishButton.onclick = async () => {
         const token = await getGithubToken()
-        if (!token) {
-            con.append('not logged in: log in with github first', 'err')
-            return
-        }
+        if (!token) return
 
-        const isOk = await verifyModPublishRequest({ githubAccessToken: token, modUrl, branch, source })
-        if (!isOk) return
-
-        const requestBody = { githubAccessToken: token, modUrl, branch, source }
-        await submit(requestBody)
+        if (!(await check())) return
+        con.append('[info]', 'publish')
     }
 }
 
@@ -55,12 +84,12 @@ async function submit(args: ModPublishRequestArgs) {
             body: JSON.stringify(args),
         })
         if (!resp.ok) {
-            con.append(`${resp.status} ${resp.statusText}: ${await resp.text()}`, 'err')
+            con.append('[error]', `${resp.status} ${resp.statusText}: ${await resp.text()}`, 'err')
             return
         }
-        con.append(`publish request sent: ${args.modUrl} (${args.branch})`, 'ok')
+        con.append('[info]', `publish request sent: ${args.modUrl} (${args.branch})`)
     } catch (e) {
-        con.append(String(e), 'err')
+        con.append('[error]', String(e))
     }
 }
 

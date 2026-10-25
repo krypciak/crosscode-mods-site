@@ -12,35 +12,38 @@
             <!--shared-header-->
             <section id="main-content">
                 <h1 id="login-notice" hidden="true">You must login first to submit a mod</h1>
-                <form id="publish-form">
-                    <div class="form-row grow">
-                        <label for="modUrl">mod url</label>
-                        <input
-                            type="text"
-                            id="modUrl"
-                            placeholder="https://github.com/CCDirectLink/CCModManager/releases/download/v1.2.1/ccmodmanager-1.2.1.ccmod"
-                            required
-                        />
-                    </div>
+                <div id="show-only-when-logged-in">
+                    <form id="publish-form">
+                        <div class="form-row grow">
+                            <label for="mod-url">mod url</label>
+                            <input
+                                type="text"
+                                id="mod-url"
+                                placeholder="https://github.com/CCDirectLink/CCModManager/releases/download/v1.2.1/ccmodmanager-1.2.1.ccmod"
+                                required
+                            />
+                        </div>
 
-                    <div class="form-row">
-                        <!--shared-db-select-->
-                    </div>
+                        <div class="form-row">
+                            <!--shared-db-select-->
+                        </div>
 
-                    <div class="form-row grow">
-                        <label for="source">source (optional)</label>
-                        <input type="text" id="source" />
-                    </div>
+                        <div class="form-row grow">
+                            <label for="source">source (optional)</label>
+                            <input type="text" id="source" />
+                        </div>
 
-                    <div class="form-row">
-                        <button type="submit">Publish</button>
-                    </div>
-                </form>
-                <section class="console-section">
-                    <label>console</label>
-                    <br />
-                    <div id="console-output" class="editor-mount"></div>
-                </section>
+                        <div class="form-row">
+                            <button type="button" id="check-button">Check</button>
+                            <button type="button" id="publish-button">Publish</button>
+                        </div>
+                    </form>
+                    <section class="console-section">
+                        <label>console</label>
+                        <br />
+                        <div id="console-output" class="editor-mount"></div>
+                    </section>
+                </div>
             </section>
         </main>
         <!--shared-speculationrules-->

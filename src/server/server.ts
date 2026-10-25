@@ -42,6 +42,7 @@ async function handleAccessToken(req: Request) {
 //  https://github.com/CCDirectLink/Blades/archive/1.6.0.zip
 const allowedDownloadPattern = /^\/[^/]+\/[^/]+\/(archive\/|releases\/download\/)/
 
+/* TODO: check if has github token */
 async function handleGithubDownload(req: Request) {
     try {
         const urlParam = new URL(req.url).searchParams.get('url')
@@ -65,8 +66,9 @@ async function handleGithubDownload(req: Request) {
         headers.set('Content-Type', upstream.headers.get('Content-Type') ?? 'application/octet-stream')
         if (upstream.headers.get('Content-Disposition'))
             headers.set('Content-Disposition', upstream.headers.get('Content-Disposition')!)
-        // no caching for now
-        headers.set('Cache-Control', 'no-store')
+        /* TODO: set to no cache!! */
+        // headers.set('Cache-Control', 'no-store')
+        headers.set('Cache-Control', 'max-age=604800')
         headers.set('X-Github-Status', String(upstream.status))
 
         return new Response(upstream.body, { status: upstream.status, headers })

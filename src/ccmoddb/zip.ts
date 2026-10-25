@@ -7,9 +7,7 @@ export interface ExtractedCcmod {
 
 export type ExtractCcmodError = 'ccmod-json-not-found' | 'ccmod-json-not-at-top-level'
 
-export type ExtractCcmodResult = { ok: true; ccmod: ExtractedCcmod } | { ok: false; error: ExtractCcmodError }
-
-export function extractCCMod(data: Uint8Array, isCCMod: boolean): ExtractCcmodResult {
+export function extractCCMod(data: Uint8Array, isCCMod: boolean): ExtractedCcmod {
     const unzipped = unzipSync(data)
     let path: string | undefined
     if (isCCMod) {
@@ -17,6 +15,6 @@ export function extractCCMod(data: Uint8Array, isCCMod: boolean): ExtractCcmodRe
     } else {
         path = Object.keys(unzipped).find(p => p.replace(/\\/g, '/').split('/').pop() === 'ccmod.json')
     }
-    if (!path) return { ok: false, error: isCCMod ? 'ccmod-json-not-at-top-level' : 'ccmod-json-not-found' }
-    return { ok: true, ccmod: { path, text: new TextDecoder().decode(unzipped[path]) } }
+    if (!path) throw new Error(isCCMod ? 'ccmod.json must be at the top level of the archive' : 'no ccmod.json found')
+    return { path, text: new TextDecoder().decode(unzipped[path]) }
 }
