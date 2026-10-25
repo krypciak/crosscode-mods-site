@@ -10,27 +10,28 @@
     <body>
         <main id="app">
             <!--shared-header-->
+            <section id="main-content">
+                <section id="branch-section">
+                    <!--shared-db-select-->
+                    <br />
 
-            <section id="branch-section">
-                <!--shared-db-select-->
-                <br>
+                    <label for="upload-btn">Extract ccmod.json from mod archive</label>
+                    <button id="upload-btn">upload .zip / .ccmod</button>
 
-                <label for="upload-btn">Extract ccmod.json from mod archive</label>
-                <button id="upload-btn">upload .zip / .ccmod</button>
-
-                <input type="file" id="file-input" accept=".zip,.ccmod,.json" hidden />
-            </section>
-
-            <div class="panels">
-                <section class="panel">
-                    <div id="input-code" class="editor-mount"></div>
+                    <input type="file" id="file-input" accept=".zip,.ccmod,.json" hidden />
                 </section>
-            </div>
 
-            <section class="console-section">
-                <label>console</label>
-                <br>
-                <div id="console-output" class="editor-mount"></div>
+                <div class="panels">
+                    <section class="panel">
+                        <div id="input-code" class="editor-mount"></div>
+                    </section>
+                </div>
+
+                <section class="console-section">
+                    <label>console</label>
+                    <br />
+                    <div id="console-output" class="editor-mount"></div>
+                </section>
             </section>
         </main>
         <!--shared-speculationrules-->

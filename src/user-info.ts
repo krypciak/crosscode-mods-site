@@ -1,4 +1,5 @@
 import type { Endpoints } from '@octokit/types'
+import { addLogoutListener } from './auth'
 
 export type GithubUserInfo = Endpoints['GET /user']['response']['data']
 
@@ -17,7 +18,7 @@ async function fetchUserInfo(token: string): Promise<GithubUserInfo> {
     return json
 }
 
-export const userCacheKey = 'github_user'
+const userCacheKey = 'github_user'
 
 function getCachedUserInfo(): GithubUserInfo | undefined {
     const str = localStorage.getItem(userCacheKey)
@@ -41,3 +42,5 @@ export async function getUserInfo(token: string): Promise<GithubUserInfo | undef
         console.error('fetching user info failed:', error)
     }
 }
+
+addLogoutListener(() => localStorage.removeItem(userCacheKey))

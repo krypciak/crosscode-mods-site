@@ -1,14 +1,28 @@
 import '../../main'
-import { getGithubToken } from '../../auth'
-import { fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
+import { addLogoutListener, getGithubToken, isLoggedIn } from '../../auth'
+import { Console, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
 
-const form = document.getElementById('publishForm') as HTMLFormElement
+const form = document.getElementById('publish-form') as HTMLFormElement
 const urlInput = document.getElementById('modUrl') as HTMLInputElement
 const sourceInput = document.getElementById('source') as HTMLInputElement
-const log = document.getElementById('log') as HTMLDivElement
+const consoleMount = document.getElementById('console-output') as HTMLDivElement
 
 fillDbSelectWithOptions()
 hookFormSubmit()
+
+updateFormVisibility()
+addLogoutListener(() => updateFormVisibility())
+
+const con = new Console(consoleMount)
+con.hookWindowConsole()
+
+async function updateFormVisibility() {
+    const loggedIn = await isLoggedIn()
+
+    const notice = document.getElementById('login-notice') as HTMLHeadingElement
+    notice.hidden = loggedIn
+    form.hidden = !loggedIn
+}
 
 function hookFormSubmit() {
     form.onsubmit = async event => {
@@ -21,7 +35,7 @@ function hookFormSubmit() {
 
         const token = await getGithubToken()
         if (!token) {
-            appendLog('not logged in: log in with github first', 'err')
+            con.append('not logged in: log in with github first', 'err')
             return
         }
 
@@ -33,14 +47,6 @@ function hookFormSubmit() {
     }
 }
 
-function appendLog(text: string, cls?: 'ok' | 'err') {
-    const span = document.createElement('span')
-    if (cls) span.className = cls
-    span.textContent = text
-    log.append(span, '\n')
-    log.scrollTop = log.scrollHeight
-}
-
 async function submit(args: ModPublishRequestArgs) {
     try {
         const resp = await fetch('/mod-publish-request', {
@@ -49,12 +55,12 @@ async function submit(args: ModPublishRequestArgs) {
             body: JSON.stringify(args),
         })
         if (!resp.ok) {
-            appendLog(`${resp.status} ${resp.statusText}: ${await resp.text()}`, 'err')
+            con.append(`${resp.status} ${resp.statusText}: ${await resp.text()}`, 'err')
             return
         }
-        appendLog(`publish request sent: ${args.modUrl} (${args.branch})`, 'ok')
+        con.append(`publish request sent: ${args.modUrl} (${args.branch})`, 'ok')
     } catch (e) {
-        appendLog(String(e), 'err')
+        con.append(String(e), 'err')
     }
 }
 

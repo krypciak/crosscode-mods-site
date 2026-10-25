@@ -4,46 +4,43 @@
         <meta charset="UTF-8" />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>CCModDB publish</title>
+        <title>CCModDB mod publish</title>
         <meta name="darkreader-lock" />
     </head>
     <body>
         <main id="app">
             <!--shared-header-->
-            <section class="form-section">
-                <h1>Publish mod</h1>
-                <span id="loginNotice" hidden="true">You must login first to submit a mod</span>
+            <section id="main-content">
+                <h1 id="login-notice" hidden="true">You must login first to submit a mod</h1>
+                <form id="publish-form">
+                    <div class="form-row grow">
+                        <label for="modUrl">mod url</label>
+                        <input
+                            type="text"
+                            id="modUrl"
+                            placeholder="https://github.com/CCDirectLink/CCModManager/releases/download/v1.2.1/ccmodmanager-1.2.1.ccmod"
+                            required
+                        />
+                    </div>
 
-                <form id="publishForm">
                     <div class="form-row">
-                        <div class="grow">
-                            <label for="modUrl">mod url</label>
-                            <input
-                                type="text"
-                                id="modUrl"
-                                placeholder="https://github.com/CCDirectLink/CCModManager/releases/download/v1.2.1/ccmodmanager-1.2.1.ccmod"
-                                required
-                            />
-                        </div>
+                        <!--shared-db-select-->
                     </div>
-                    <div class="form-row">
-                        <div class="grow">
-                            <!--shared-db-select-->
-                        </div>
+
+                    <div class="form-row grow">
+                        <label for="source">source (optional)</label>
+                        <input type="text" id="source" />
                     </div>
-                    <div class="form-row">
-                        <div class="grow">
-                            <label for="source">source (optional)</label>
-                            <input type="text" id="source" />
-                        </div>
-                    </div>
+
                     <div class="form-row">
                         <button type="submit">Publish</button>
                     </div>
                 </form>
-            </section>
-            <section class="console-section">
-                <div class="log" id="log"></div>
+                <section class="console-section">
+                    <label>console</label>
+                    <br />
+                    <div id="console-output" class="editor-mount"></div>
+                </section>
             </section>
         </main>
         <!--shared-speculationrules-->

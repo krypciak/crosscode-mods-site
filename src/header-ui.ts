@@ -1,5 +1,5 @@
 import { githubClientId } from './config'
-import { getGithubToken, isLoggedIn, logoutGithub } from './auth'
+import { addLogoutListener, getGithubToken, isLoggedIn, logoutGithub } from './auth'
 import { setOAuthState, setPkceChallenge } from './auth-security'
 import { getUserInfo, type GithubUserInfo } from './user-info'
 
@@ -8,6 +8,8 @@ let defaultAvatarDataUri: string
 const githubLoginLogoutLink = document.getElementById('githubLoginLogoutLink') as HTMLLinkElement
 const githubUsername = document.getElementById('githubUsername') as HTMLSpanElement
 const githubAvatar = document.getElementById('githubAvatar') as HTMLImageElement
+
+addLogoutListener(() => void updateGithubUiElements())
 
 export function updateActiveNavLink() {
     const here = location.pathname == '/index.html' ? '/' : location.pathname
@@ -37,7 +39,6 @@ async function updateLoginLogoutLink(loggedIn: boolean) {
         githubLoginLogoutLink.onclick = event => {
             event.preventDefault()
             logoutGithub()
-            void updateGithubUiElements()
         }
     } else {
         githubLoginLogoutLink.textContent = 'Login with GitHub'

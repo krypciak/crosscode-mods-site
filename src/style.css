@@ -80,12 +80,24 @@ body {
     scroll-behavior: smooth;
 }
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 #app {
     width: 100%;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
+}
+
+#main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 6px;
 }
 
 header {
@@ -147,6 +159,37 @@ label {
     font-size: 18px;
 }
 
+form {
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+}
+
+/* publish-mod.html */
+#publish-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.form-row.grow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-row.grow input {
+    flex: 1;
+    min-width: 0;
+}
+
+.form-row.grow label {
+    line-height: normal;
+    margin: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
     a,
     button {
@@ -164,7 +207,7 @@ label {
 
 .panel {
     flex: 1;
-    padding: 4px 6px;
+    padding: 4px 0px;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -173,7 +216,7 @@ label {
 }
 
 .console-section {
-    padding: 4px 6px;
+    padding: 4px 0px;
     flex: 0 0 320px;
     min-height: 0;
     overflow: hidden;
@@ -211,8 +254,4 @@ label {
     margin-top: 4px;
     display: flex;
     gap: 4px;
-}
-
-#branch-section {
-    padding: 4px 6px;
 }

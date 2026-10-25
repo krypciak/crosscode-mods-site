@@ -1,6 +1,5 @@
 import { githubClientId } from './config'
 import { takePkceVerifier, verifyOAuthState } from './auth-security'
-import { userCacheKey } from './user-info'
 
 interface GithubTokenRequestSuccess {
     access_token: string
@@ -113,6 +112,12 @@ export async function isLoggedIn() {
 }
 
 export function logoutGithub() {
-    localStorage.removeItem(authStorageKey)
-    localStorage.removeItem(userCacheKey)
+    for (const func of logoutListeners) func()
 }
+
+const logoutListeners: (() => void)[] = []
+export function addLogoutListener(func: () => void) {
+    logoutListeners.push(func)
+}
+
+addLogoutListener(() => localStorage.removeItem(authStorageKey))
