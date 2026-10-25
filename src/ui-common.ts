@@ -4,6 +4,7 @@ import { Range, EditorState, StateEffect, StateField, type Extension } from '@co
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { Decoration, type DecorationSet } from '@codemirror/view'
+import { c, RED, YELLOW } from './colors-and-symbols'
 
 export const dbSelect = document.getElementById('db-select') as HTMLSelectElement
 
@@ -165,8 +166,10 @@ export class Console {
     }
 
     append(level: '[info]' | '[warn]' | '[error]', ...args: any[]) {
+        const levelText = c(level == '[warn]' ? YELLOW : level == '[error]' ? RED : '', level)
+
         const line =
-            level +
+            levelText +
             ' ' +
             args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ') +
             '\n'
@@ -220,5 +223,3 @@ export class Console {
         )
     }
 }
-
-export const checkSymbol = '\x1b[31m\u2717'

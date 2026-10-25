@@ -1,16 +1,18 @@
 import '../../main'
 import { addLogoutListener, getGithubToken, isLoggedIn } from '../../auth'
-import { Console, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
+import { Console, dbSelect, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
 import { githubAssetDownload } from '../../github-download'
 import { extractCCMod, type ExtractedCcmod } from '../../ccmoddb/zip'
+import { runModCheck } from '../check-mod/ccmod-check'
 
+const form = document.getElementById('publish-form') as HTMLFormElement
 const loggedInDiv = document.getElementById('show-only-when-logged-in') as HTMLDivElement
 const urlInput = document.getElementById('mod-url') as HTMLInputElement
 const sourceInput = document.getElementById('source') as HTMLInputElement
 const consoleMount = document.getElementById('console-output') as HTMLDivElement
 
-const checkButton = document.getElementById('check-button') as HTMLButtonElement
-const publishButton = document.getElementById('publish-button') as HTMLButtonElement
+const checkButton = document.getElementById('check-button') as HTMLInputElement
+const publishButton = document.getElementById('publish-button') as HTMLInputElement
 
 fillDbSelectWithOptions()
 hookButtons()
@@ -31,8 +33,6 @@ async function updateFormVisibility() {
 
 async function check(): Promise<boolean> {
     const modUrl = urlInput.value.trim()
-    const branch = getCurrentlySelectedDbName()
-    const source = sourceInput.value.trim()
     if (!modUrl) return false
 
     con.clear()
@@ -51,32 +51,51 @@ async function check(): Promise<boolean> {
     let result: ExtractedCcmod
     try {
         result = extractCCMod(modArchive, isCCMod)
-    } catch (e) {}
+    } catch (e) {
+        con.append('[error]', e)
+        return false
+    }
 
-    return true
+    try {
+        const stats = await runModCheck(con, result.text, false)
+        const success = stats?.failCount == 0
+
+        return success
+    } catch (e) {
+        con.append('[error]', 'error while checking ccmod', e)
+        return false
+    }
 }
 
 function hookButtons() {
-    checkButton.onclick = async () => {
-        await check()
+    urlInput.addEventListener('change', () => (publishButton.disabled = true))
+    sourceInput.addEventListener('change', () => (publishButton.disabled = true))
+    dbSelect.addEventListener('change', () => (publishButton.disabled = true))
 
-        // const isOk = await verifyModPublishRequest({ githubAccessToken: token, modUrl, branch, source })
-        // if (!isOk) return
-        //
-        // const requestBody = { githubAccessToken: token, modUrl, branch, source }
-        // await submit(requestBody)
+    checkButton.onclick = async () => {
+        const success = await check()
+
+        publishButton.disabled = !success
+        if (!success) return
     }
 
     publishButton.onclick = async () => {
+        const modUrl = urlInput.value.trim()
+
         const token = await getGithubToken()
         if (!token) return
 
-        if (!(await check())) return
         con.append('[info]', 'publish')
+
+        const branch = getCurrentlySelectedDbName()
+        const source = sourceInput.value?.trim() ?? ''
+
+        await submit({ githubAccessToken: token, modUrl, branch, source })
     }
+    form.onsubmit = () => false
 }
 
-async function submit(args: ModPublishRequestArgs) {
+async function submit(args: { githubAccessToken: string; modUrl: string; branch: string; source: string }) {
     try {
         const resp = await fetch('/mod-publish-request', {
             method: 'POST',
@@ -91,15 +110,4 @@ async function submit(args: ModPublishRequestArgs) {
     } catch (e) {
         con.append('[error]', String(e))
     }
-}
-
-interface ModPublishRequestArgs {
-    githubAccessToken: string
-    modUrl: string
-    branch: string
-    source: string
-}
-
-async function verifyModPublishRequest(request: ModPublishRequestArgs): Promise<boolean> {
-    return true
 }
