@@ -1,12 +1,15 @@
 import type { CCModChecker } from 'ccmoddb/build/tests/ccmod-check'
 import { BOLD, c, DIM, FAIL_SYM, PASS_SYM } from '../colors-and-symbols'
 
-function print(str: string) {
-    console.log(str)
-}
 export class Tester {
     successCount = 0
     failCount = 0
+
+    constructor(private silent: boolean = false) {}
+
+    private print(str: string) {
+        if (!this.silent) console.log(str)
+    }
 
     resetTesterStats() {
         this.successCount = 0
@@ -26,9 +29,9 @@ export class Tester {
                 errorMessage ??= e.message
             }
         } finally {
-            print(`  ${success ? PASS_SYM : FAIL_SYM} ${name}${c(DIM, ' >')}${c(BOLD, ` ${name}`)}`)
+            this.print(`  ${success ? PASS_SYM : FAIL_SYM} ${name}${c(DIM, ' >')}${c(BOLD, ` ${name}`)}`)
             if (errorMessage) {
-                print(`${errorMessage}`)
+                this.print(`${errorMessage}`)
             }
         }
     }

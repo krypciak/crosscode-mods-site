@@ -20,6 +20,8 @@ hookButtons()
 updateFormVisibility()
 addLogoutListener(() => updateFormVisibility())
 
+publishButton.disabled = true
+
 const con = new Console(consoleMount)
 con.hookWindowConsole()
 
@@ -29,6 +31,7 @@ async function updateFormVisibility() {
     const notice = document.getElementById('login-notice') as HTMLHeadingElement
     notice.hidden = loggedIn
     loggedInDiv.hidden = !loggedIn
+    loggedInDiv.style.display = loggedIn ? '' : 'none'
 }
 
 async function check(): Promise<boolean> {
@@ -59,7 +62,7 @@ async function check(): Promise<boolean> {
     }
 
     try {
-        const stats = await runModCheck(con, result.text, false)
+        const stats = await runModCheck(con, result.text, getCurrentlySelectedDbName(), false)
         const success = stats?.failCount == 0
 
         return success
@@ -67,6 +70,23 @@ async function check(): Promise<boolean> {
         con.append('[error]', 'error while checking ccmod', e)
         return false
     }
+}
+
+async function publish() {
+    const modUrl = urlInput.value.trim()
+
+    const token = await getGithubToken()
+    if (!token) return
+
+    con.append('[info]', 'publish')
+
+    const branch = getCurrentlySelectedDbName()
+    const source = sourceInput.value?.trim() ?? ''
+
+    const submitSuccess = await submit({ token, url: modUrl, branch, source })
+    if (!submitSuccess) return
+
+    con.append('[info]', `submitted!`)
 }
 
 function hookButtons() {
@@ -81,23 +101,11 @@ function hookButtons() {
         if (!success) return
     }
 
-    publishButton.onclick = async () => {
-        const modUrl = urlInput.value.trim()
-
-        const token = await getGithubToken()
-        if (!token) return
-
-        con.append('[info]', 'publish')
-
-        const branch = getCurrentlySelectedDbName()
-        const source = sourceInput.value?.trim() ?? ''
-
-        await submit({ githubAccessToken: token, modUrl, branch, source })
-    }
+    publishButton.onclick = publish
     form.onsubmit = () => false
 }
 
-async function submit(args: { githubAccessToken: string; modUrl: string; branch: string; source: string }) {
+async function submit(args: { token: string; url: string; branch: string; source: string }): Promise<boolean> {
     try {
         const resp = await fetch('/mod-publish-request', {
             method: 'POST',
@@ -105,11 +113,15 @@ async function submit(args: { githubAccessToken: string; modUrl: string; branch:
             body: JSON.stringify(args),
         })
         if (!resp.ok) {
-            con.append('[error]', `${resp.status} ${resp.statusText}: ${await resp.text()}`, 'err')
-            return
+            if (resp.status == 502 || resp.status == 404) {
+                throw new Error('the server is probably down?')
+            }
+            throw new Error(`${resp.status} ${resp.statusText} ${await resp.text()}`)
         }
-        con.append('[info]', `publish request sent: ${args.modUrl} (${args.branch})`)
+        return true
     } catch (e) {
-        con.append('[error]', String(e))
+        const errorMsg = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
+        con.append('[error]', errorMsg)
+        return false
     }
 }
