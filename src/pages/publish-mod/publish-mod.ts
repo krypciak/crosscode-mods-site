@@ -1,35 +1,21 @@
 import '../../main'
 import { getGithubToken } from '../../auth'
-import { allowedBranches } from '../../config'
+import { fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
 
 const form = document.getElementById('publishForm') as HTMLFormElement
 const urlInput = document.getElementById('modUrl') as HTMLInputElement
-const branchSelect = document.getElementById('branch') as HTMLSelectElement
 const sourceInput = document.getElementById('source') as HTMLInputElement
 const log = document.getElementById('log') as HTMLDivElement
 
-function start() {
-    fillDbSelectWithOptions()
-    hookFormSubmit()
-}
-start()
-
-function fillDbSelectWithOptions() {
-    for (const branch of allowedBranches) {
-        const option = document.createElement('option')
-        option.value = branch
-        option.textContent = branch
-        branchSelect.append(option)
-    }
-    branchSelect.value = allowedBranches[0]
-}
+fillDbSelectWithOptions()
+hookFormSubmit()
 
 function hookFormSubmit() {
     form.onsubmit = async event => {
         event.preventDefault()
 
         const modUrl = urlInput.value.trim()
-        const branch = branchSelect.value
+        const branch = getCurrentlySelectedDbName()
         const source = sourceInput.value.trim()
         if (!modUrl) return
 

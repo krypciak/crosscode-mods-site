@@ -8,6 +8,7 @@ async function htmlPartials(): Promise<Plugin> {
     }
     const header = await read('header')
     const speculationRules = await read('speculation-rules')
+    const dbSelect = await read('db-select')
 
     return {
         name: 'shared-html-partials',
@@ -15,6 +16,7 @@ async function htmlPartials(): Promise<Plugin> {
             return html
                 .replaceAll('<!--shared-header-->', header)
                 .replaceAll('<!--shared-speculationrules-->', speculationRules)
+                .replaceAll('<!--shared-db-select-->', dbSelect)
         },
     }
 }
