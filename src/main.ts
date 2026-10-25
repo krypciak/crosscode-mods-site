@@ -1,6 +1,6 @@
 import './style.css'
 import { checkForGithubCallback } from './auth'
-import { updateActiveNavLink, updateGithubUiElements } from './ui'
+import { updateActiveNavLink, updateGithubUiElements } from './header-ui'
 
 updateActiveNavLink()
 await checkForGithubCallback()
