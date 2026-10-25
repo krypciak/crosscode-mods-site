@@ -1,3 +1,6 @@
+import { extractCCMod, type ExtractedCcmod } from '../ccmoddb/zip'
+import { runModCheck } from '../pages/check-mod/ccmod-check'
+
 const githubClientSecret = process.env.GITHUB_CLIENT_SECRET
 if (!githubClientSecret) throw new Error('GITHUB_CLIENT_SECRET environment variable not set!')
 
@@ -73,16 +76,45 @@ async function handleGithubDownload(req: Request) {
 
         return new Response(upstream.body, { status: upstream.status, headers })
     } catch (e) {
-        const message = (e as Error).message
+        const message = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
         return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
     }
 }
 
-// required request parameters:
-// github access token
-// mod url
-// branch
-// source
 async function handleModPublishRequest(req: Request) {
-    return new Response()
+    try {
+        const url = new URL(req.url)
+
+        const tokenParam = url.searchParams.get('token')
+        if (!tokenParam) throw new Error('missing "token" query parameter')
+
+        const modUrl = url.searchParams.get('url')
+        if (!modUrl) throw new Error('missing "url" query parameter')
+
+        const branch = url.searchParams.get('branch')
+        if (!branch) throw new Error('missing "branch" query parameter')
+
+        const source = url.searchParams.get('source')
+        if (!source) throw new Error('missing "source" query parameter')
+
+        if (!(await checkCCMod(modUrl))) throw new Error('ccmod.json check failed')
+
+        return new Response()
+    } catch (e) {
+        const message = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
+        return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
+    }
+}
+
+async function checkCCMod(modUrl: string): Promise<boolean> {
+    const resp = await fetch(modUrl)
+    const modArchive = await resp.bytes()
+
+    const isCCMod = modUrl.endsWith('.ccmod')
+    const result = extractCCMod(modArchive, isCCMod)
+
+    const stats = await runModCheck(undefined, result.text, false)
+    const success = stats?.failCount == 0
+
+    return success
 }

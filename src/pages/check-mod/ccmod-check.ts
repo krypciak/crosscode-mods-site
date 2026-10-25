@@ -11,9 +11,9 @@ async function getDatabases(dbName: string): Promise<PackageDB[]> {
     return branch.getDbs()
 }
 
-export async function runModCheck(con: Console, input: string, standalonePrint: boolean = true) {
+export async function runModCheck(con: Console | undefined, input: string, standalonePrint: boolean = true) {
     if (!input) {
-        con.append('[error]', 'no input provided')
+        con?.append('[error]', 'no input provided')
         return
     }
 
@@ -21,21 +21,21 @@ export async function runModCheck(con: Console, input: string, standalonePrint: 
     try {
         ccmod = JSON.parse(input) as PkgCCMod
     } catch (e) {
-        con.append('[error]', 'invalid ccmod.json JSON:', (e as Error).message)
+        con?.append('[error]', 'invalid ccmod.json JSON:', (e as Error).message)
         return
     }
-    if (standalonePrint) con.clear()
+    if (standalonePrint) con?.clear()
     const databases = await getDatabases(getCurrentlySelectedDbName())
     const tester = new Tester()
     const ccmodChecker = new CCModChecker(databases, tester.test, tester.expect)
-    if (standalonePrint) con.append('[info]', `running (${new Date().toLocaleString()})...`)
+    if (standalonePrint) con?.append('[info]', `running (${new Date().toLocaleString()})...`)
 
     ccmodChecker.testMetadataCCMod(ccmod)
 
     if (tester.failCount == 0) {
-        con.append('[info]', PASS_SYM, 'success')
+        con?.append('[info]', PASS_SYM, 'success')
     } else {
-        con.append('[error]', FAIL_SYM, 'tests failed!')
+        con?.append('[error]', FAIL_SYM, 'tests failed!')
     }
     return tester
 }

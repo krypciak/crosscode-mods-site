@@ -34,6 +34,7 @@ async function updateFormVisibility() {
 async function check(): Promise<boolean> {
     const modUrl = urlInput.value.trim()
     if (!modUrl) return false
+    const source = sourceInput.value?.trim() ?? ''
 
     con.clear()
     con.append('[info]', 'downloading', `"${modUrl}"`)
@@ -50,9 +51,10 @@ async function check(): Promise<boolean> {
     const isCCMod = modUrl.endsWith('.ccmod')
     let result: ExtractedCcmod
     try {
-        result = extractCCMod(modArchive, isCCMod)
+        result = extractCCMod(modArchive, isCCMod, source)
     } catch (e) {
-        con.append('[error]', e)
+        const errorMsg = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
+        con.append('[error]', errorMsg)
         return false
     }
 
