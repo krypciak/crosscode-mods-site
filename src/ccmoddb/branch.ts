@@ -29,6 +29,10 @@ class Branch {
             ...((await this.config.parent?.getDbs()) ?? []),
         ]
     }
+
+    getName() {
+        return '@' + this.config.owner + '/' + this.config.repoName + '/' + this.config.branch
+    }
 }
 
 const stable = new Branch({
@@ -43,4 +47,6 @@ const testing = new Branch({
     parent: stable,
 })
 
-export const branches: Record<string, Branch> = { stable, testing }
+export const branches: Record<string, Branch> = Object.fromEntries(
+    [stable, testing].map(branch => [branch.getName(), branch])
+)

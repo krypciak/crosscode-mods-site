@@ -9,12 +9,12 @@ const sourceInput = document.getElementById('source') as HTMLInputElement
 const log = document.getElementById('log') as HTMLDivElement
 
 function start() {
-    fillBranchSelectWithOptions()
+    fillDbSelectWithOptions()
     hookFormSubmit()
 }
 start()
 
-function fillBranchSelectWithOptions() {
+function fillDbSelectWithOptions() {
     for (const branch of allowedBranches) {
         const option = document.createElement('option')
         option.value = branch

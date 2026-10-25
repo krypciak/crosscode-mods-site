@@ -1,13 +1,13 @@
 import type { PackageDB, PkgCCMod } from 'ccmoddb/build/src/types'
 import '../../main'
 import './ui'
-import { appendConsole, clearConsole, getCodeInputString, getDatabaseMode } from './ui'
+import { appendConsole, clearConsole, getCodeInputString, getCurrentlySelectedDatabaseName } from './ui'
 import { branches } from '../../ccmoddb/branch'
 import { CCModChecker } from 'ccmoddb/build/tests/ccmod-check'
 import { expect, test } from '../../ccmoddb/test-functions'
 
-async function getDatabases(mode: 'stable' | 'testing'): Promise<PackageDB[]> {
-    const branch = branches[mode]
+async function getDatabases(dbName: string): Promise<PackageDB[]> {
+    const branch = branches[dbName]
     if (!branch) throw new Error()
     return branch.getDbs()
 }
@@ -27,7 +27,7 @@ export async function runModCheck() {
         return
     }
     clearConsole()
-    const databases = await getDatabases(getDatabaseMode())
+    const databases = await getDatabases(getCurrentlySelectedDatabaseName())
     const ccmodChecker = new CCModChecker(databases, test, expect)
     appendConsole(`[ui] running (${new Date().toLocaleString()})...`)
     ccmodChecker.testMetadataCCMod(ccmod)

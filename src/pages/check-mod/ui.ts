@@ -210,8 +210,9 @@ export function getCodeInputString() {
     return inputEditor.state.doc.toString().trim()
 }
 
-export function getDatabaseMode(): 'stable' | 'testing' {
-    return document.querySelector<HTMLSelectElement>('#db-select')!.value as 'stable' | 'testing'
+const dbSelect = document.querySelector<HTMLSelectElement>('#db-select')!
+export function getCurrentlySelectedDatabaseName(): string {
+    return dbSelect.value
 }
 
-document.querySelector<HTMLSelectElement>('#db-select')!.addEventListener('change', () => runModCheck())
+dbSelect.addEventListener('change', () => runModCheck())

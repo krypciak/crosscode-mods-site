@@ -10,15 +10,19 @@
     <body>
         <main id="app">
             <!--shared-header-->
-            <select id="db-select">
-                <option value="stable">stable</option>
-                <option value="testing">testing</option>
-            </select>
-            <button id="upload-btn">upload .zip / .ccmod</button>
+            <section>
+                <label for="db-select">Branch</label>
+                <select id="db-select">
+                    <option value="@CCDirectLink/CCModDB/stable">@CCDirectLink/CCModDB/stable</option>
+                </select>
+                <br>
 
-            <input type="file" id="file-input" accept=".zip,.ccmod,.json" hidden />
+                <label for="upload-btn">Extract ccmod.json from mod archive</label>
+                <button id="upload-btn">upload .zip / .ccmod</button>
 
-            <label>ccmod.json (input)</label>
+                <input type="file" id="file-input" accept=".zip,.ccmod,.json" hidden />
+            </section>
+
             <div class="panels">
                 <section class="panel">
                     <div id="input-code" class="editor-mount"></div>
@@ -27,6 +31,7 @@
 
             <section class="console-section">
                 <label>console</label>
+                <br>
                 <div id="console-output" class="editor-mount"></div>
             </section>
         </main>
