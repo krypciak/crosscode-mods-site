@@ -49,40 +49,11 @@ function rootRedirect(): Plugin {
     }
 }
 
-function ultimateCrosscodeTypedefsZip(): Plugin {
-    return {
-        name: 'ultimate-crosscode-typedefs-proxy',
-        configureServer(server) {
-            let cache: Uint8Array | undefined
-
-            server.middlewares.use(async (req, res, next) => {
-                if (req.url !== '/ultimate-crosscode-typedefs.zip') return next()
-
-                if (!cache) {
-                    const upstream = await fetch(
-                        'https://codeload.github.com/krypciak/ultimate-crosscode-typedefs/legacy.zip/refs/heads/master'
-                    )
-                    if (!upstream.ok) {
-                        res.statusCode = upstream.status
-                        return res.end(`Upstream error: ${upstream.status}`)
-                    }
-                    cache = await upstream.bytes()
-                }
-
-                res.setHeader('Content-Type', 'application/zip')
-                res.setHeader('Cache-Control', 'public, max-age=432000') // 5d for browser
-                res.removeHeader('Server')
-                res.end(cache)
-            })
-        },
-    }
-}
-
 // multi-page app: one html entry per site page
 // (dev serves any root .html automatically; this is needed for `vite build`)
 export default defineConfig({
     appType: 'mpa',
-    plugins: [await htmlPartials(), rootRedirect(), ultimateCrosscodeTypedefsZip()],
+    plugins: [await htmlPartials(), rootRedirect()],
     root: './src/pages',
     publicDir: '../../public',
     build: {
@@ -95,6 +66,15 @@ export default defineConfig({
                 'publish-mod': fileURLToPath(new URL('./src/pages/publish-mod.html', import.meta.url)),
                 'check-mod': fileURLToPath(new URL('./src/pages/check-mod.html', import.meta.url)),
                 'format-code': fileURLToPath(new URL('./src/pages/format-code.html', import.meta.url)),
+            },
+        },
+    },
+    server: {
+        proxy: {
+            '/ultimate-crosscode-typedefs.zip': {
+                target: 'https://codeload.github.com/krypciak/ultimate-crosscode-typedefs/legacy.zip/refs/heads/master',
+                changeOrigin: true,
+                rewrite: () => '',
             },
         },
     },
