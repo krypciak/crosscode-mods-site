@@ -11,10 +11,17 @@ const githubAvatar = document.getElementById('githubAvatar') as HTMLImageElement
 
 addLogoutListener(() => void updateGithubUiElements())
 
+// pages are served with clean urls (`/check-mod` -> `check-mod.html`),
+// but `/check-mod.html` still works when hit directly
+function normalizePath(pathname: string): string {
+    if (pathname == '/index.html') return '/'
+    return pathname.replace(/\.html$/, '')
+}
+
 export function updateActiveNavLink() {
-    const here = location.pathname == '/index.html' ? '/' : location.pathname
+    const here = normalizePath(location.pathname)
     for (const a of document.querySelectorAll<HTMLAnchorElement>('.page-nav a')) {
-        const href = new URL(a.getAttribute('href') ?? '.', location.origin).pathname
+        const href = normalizePath(new URL(a.getAttribute('href') ?? '.', location.origin).pathname)
         if (href == here) a.setAttribute('aria-current', 'page')
         else a.removeAttribute('aria-current')
     }
