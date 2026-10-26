@@ -199,6 +199,29 @@ form {
 }
 
 /* editor css */
+/* pages with a full-height editor: the page itself never grows, the editor scrolls */
+#app.editor-page {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#app.editor-page #main-content {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* keep the main editor visible on short viewports, shrinking the console first */
+#app.editor-page .panels {
+    min-height: 200px;
+}
+
+#app.editor-page .console-section {
+    flex: 0 1 320px;
+    min-height: 100px;
+}
+
 .panels {
     display: flex;
     flex: 1;
