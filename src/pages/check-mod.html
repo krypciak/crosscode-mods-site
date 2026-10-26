@@ -11,6 +11,12 @@
         <main id="app">
             <!--shared-header-->
             <section id="main-content">
+                <div class="panels">
+                    <section class="panel">
+                        <label for="input-code">ccmod.json</label>
+                        <div id="input-code" class="editor-mount"></div>
+                    </section>
+                </div>
                 <section id="branch-section">
                     <!--shared-db-select-->
                     <br />
@@ -21,14 +27,8 @@
                     <input type="file" id="file-input" accept=".zip,.ccmod,.json" hidden />
                 </section>
 
-                <div class="panels">
-                    <section class="panel">
-                        <div id="input-code" class="editor-mount"></div>
-                    </section>
-                </div>
-
                 <section class="console-section">
-                    <label>console</label>
+                    <label for="console-output">console</label>
                     <br />
                     <div id="console-output" class="editor-mount"></div>
                 </section>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Format CrossCode code</title>
+        <meta name="darkreader-lock" />
+    </head>
+    <body>
+        <main id="app">
+            <!--shared-header-->
+            <section id="main-content">
+                <div class="panels">
+                    <section class="panel">
+                        <label for="input-code">game code (input)</label>
+                        <div id="input-code" class="editor-mount"></div>
+                        <div class="row">
+                            <button id="upload-btn">upload file</button>
+                            <button id="run-btn">run</button>
+                            <button id="clear-btn">clear cache</button>
+                            <input type="file" id="file-input" hidden />
+                        </div>
+                    </section>
+
+                    <section class="panel">
+                        <label for="output-code">typed game code (output)</label>
+                        <div id="output-code" class="editor-mount"></div>
+                        <div class="row">
+                            <button id="download-btn">download file</button>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="console-section">
+                    <label for="console-output">console</label>
+                    <div id="console-output" class="editor-mount"></div>
+                </section>
+            </section>
+        </main>
+        <!--shared-speculationrules-->
+        <script type="module" src="./format-code/format-code.ts"></script>
+    </body>
+</html>

@@ -94,6 +94,7 @@ export default defineConfig({
                 mods: fileURLToPath(new URL('./src/pages/mods.html', import.meta.url)),
                 'publish-mod': fileURLToPath(new URL('./src/pages/publish-mod.html', import.meta.url)),
                 'check-mod': fileURLToPath(new URL('./src/pages/check-mod.html', import.meta.url)),
+                'format-code': fileURLToPath(new URL('./src/pages/format-code.html', import.meta.url)),
             },
         },
     },
