@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig, type Connect, type Plugin } from 'vite'
 import { readFile } from 'fs/promises'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 async function htmlPartials(): Promise<Plugin> {
     function read(name: string): Promise<string> {
@@ -53,7 +54,14 @@ function rootRedirect(): Plugin {
 // (dev serves any root .html automatically; this is needed for `vite build`)
 export default defineConfig({
     appType: 'mpa',
-    plugins: [await htmlPartials(), rootRedirect()],
+    plugins: [
+        await htmlPartials(),
+        rootRedirect(),
+        nodePolyfills({
+            include: ['path', `assert`],
+            globals: { process: true },
+        }),
+    ],
     root: './src/pages',
     publicDir: '../../public',
     build: {

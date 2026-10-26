@@ -5,6 +5,7 @@ import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { Decoration, type DecorationSet } from '@codemirror/view'
 import { c, RED, YELLOW } from './colors-and-symbols'
+import { javascript } from '@codemirror/lang-javascript'
 
 export const dbSelect = document.getElementById('db-select') as HTMLSelectElement
 
@@ -34,6 +35,7 @@ export class Editor {
         onChanged = () => {},
         changeTimer = 0,
         extensions = [],
+        language = 'json',
     }: {
         mount: HTMLElement
         editable: boolean
@@ -41,6 +43,7 @@ export class Editor {
         onChanged?: () => void
         changeTimer?: number
         extensions?: Extension[]
+        language?: 'json' | 'javascript'
     }) {
         let autoRunTimer: NodeJS.Timeout
         this.view = new EditorView({
@@ -48,7 +51,7 @@ export class Editor {
                 doc,
                 extensions: [
                     basicSetup,
-                    json(),
+                    ...[language == 'javascript' ? [javascript()] : language == 'json' ? [json()] : []],
                     oneDark,
                     EditorState.readOnly.of(!editable),
                     EditorView.theme({
