@@ -7,13 +7,10 @@ if (!githubClientSecret) throw new Error('GITHUB_CLIENT_SECRET environment varia
 Bun.serve({
     port: 4895,
     hostname: '127.0.0.1',
-    async fetch(req) {
-        const pathname = new URL(req.url).pathname
-        if (req.method == 'POST' && pathname == '/access_token') return handleAccessToken(req)
-        if (req.method == 'GET' && pathname == '/gh') return handleGithubDownload(req)
-        if (req.method == 'POST' && pathname == '/mod-publish-request') return handleModPublishRequest(req)
-
-        return new Response('Not Found', { status: 404 })
+    routes: {
+        '/access_token': { POST: handleAccessToken },
+        '/gh': { GET: handleGithubDownload },
+        '/mod-publish-request': { POST: handleModPublishRequest },
     },
 })
 
