@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, type Connect, type Plugin } from 'vite'
 import { readFile } from 'fs/promises'
 
 async function htmlPartials(): Promise<Plugin> {
@@ -17,6 +17,34 @@ async function htmlPartials(): Promise<Plugin> {
                 .replaceAll('<!--shared-header-->', header)
                 .replaceAll('<!--shared-speculationrules-->', speculationRules)
                 .replaceAll('<!--shared-db-select-->', dbSelect)
+        },
+    }
+}
+
+function rootRedirect(): Plugin {
+    const middleware: Connect.NextHandleFunction = (req, res, next) => {
+        const url = req.url ?? '/'
+        const queryIndex = url.indexOf('?')
+        const pathname = queryIndex === -1 ? url : url.slice(0, queryIndex)
+
+        if (pathname === '/' || pathname === '/index.html') {
+            const query = queryIndex === -1 ? '' : url.slice(queryIndex)
+            res.statusCode = 302 // temporary so the browser doesn't cache it during dev
+            res.setHeader('Location', '/mods' + query)
+            res.end()
+            return
+        }
+
+        next()
+    }
+
+    return {
+        name: 'root-redirect',
+        configureServer(server) {
+            server.middlewares.use(middleware)
+        },
+        configurePreviewServer(server) {
+            server.middlewares.use(middleware)
         },
     }
 }
@@ -53,7 +81,8 @@ function ultimateCrosscodeTypedefsZip(): Plugin {
 // multi-page app: one html entry per site page
 // (dev serves any root .html automatically; this is needed for `vite build`)
 export default defineConfig({
-    plugins: [await htmlPartials(), ultimateCrosscodeTypedefsZip()],
+    appType: 'mpa',
+    plugins: [await htmlPartials(), rootRedirect(), ultimateCrosscodeTypedefsZip()],
     root: './src/pages',
     publicDir: '../../public',
     build: {
@@ -62,7 +91,7 @@ export default defineConfig({
         emptyOutDir: true,
         rollupOptions: {
             input: {
-                mods: fileURLToPath(new URL('./src/pages/index.html', import.meta.url)),
+                mods: fileURLToPath(new URL('./src/pages/mods.html', import.meta.url)),
                 'publish-mod': fileURLToPath(new URL('./src/pages/publish-mod.html', import.meta.url)),
                 'check-mod': fileURLToPath(new URL('./src/pages/check-mod.html', import.meta.url)),
             },

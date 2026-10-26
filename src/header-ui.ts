@@ -14,7 +14,6 @@ addLogoutListener(() => void updateGithubUiElements())
 // pages are served with clean urls (`/check-mod` -> `check-mod.html`),
 // but `/check-mod.html` still works when hit directly
 function normalizePath(pathname: string): string {
-    if (pathname == '/index.html') return '/'
     return pathname.replace(/\.html$/, '')
 }
 

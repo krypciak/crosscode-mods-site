@@ -68,7 +68,7 @@ export async function checkForGithubCallback() {
 
             await requestAccessTokenAndStore({ code, code_verifier: codeVerifier })
 
-            window.location.href = '/'
+            window.location.href = '/publish-mod'
         } else if (params.get('error')) {
             verifyOAuthState(params)
 
