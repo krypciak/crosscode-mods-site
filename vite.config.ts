@@ -21,10 +21,39 @@ async function htmlPartials(): Promise<Plugin> {
     }
 }
 
+function ultimateCrosscodeTypedefsZip(): Plugin {
+    return {
+        name: 'ultimate-crosscode-typedefs-proxy',
+        configureServer(server) {
+            let cache: Uint8Array | undefined
+
+            server.middlewares.use(async (req, res, next) => {
+                if (req.url !== '/ultimate-crosscode-typedefs.zip') return next()
+
+                if (!cache) {
+                    const upstream = await fetch(
+                        'https://codeload.github.com/krypciak/ultimate-crosscode-typedefs/legacy.zip/refs/heads/master'
+                    )
+                    if (!upstream.ok) {
+                        res.statusCode = upstream.status
+                        return res.end(`Upstream error: ${upstream.status}`)
+                    }
+                    cache = await upstream.bytes()
+                }
+
+                res.setHeader('Content-Type', 'application/zip')
+                res.setHeader('Cache-Control', 'public, max-age=432000') // 5d for browser
+                res.removeHeader('Server')
+                res.end(cache)
+            })
+        },
+    }
+}
+
 // multi-page app: one html entry per site page
 // (dev serves any root .html automatically; this is needed for `vite build`)
 export default defineConfig({
-    plugins: [await htmlPartials()],
+    plugins: [await htmlPartials(), ultimateCrosscodeTypedefsZip()],
     root: './src/pages',
     publicDir: '../../public',
     build: {
