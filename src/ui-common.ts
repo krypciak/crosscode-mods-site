@@ -4,7 +4,7 @@ import { Range, EditorState, StateEffect, StateField, type Extension } from '@co
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { Decoration, type DecorationSet } from '@codemirror/view'
-import { c, RED, YELLOW } from './colors-and-symbols'
+import { BLUE, c, GREEN, RED, YELLOW } from './colors-and-symbols'
 import { javascript } from '@codemirror/lang-javascript'
 
 export const dbSelect = document.getElementById('db-select') as HTMLSelectElement
@@ -133,6 +133,13 @@ function parseAnsi(str: string): Segment[] {
     return segments
 }
 
+type LogLevel = keyof typeof logLevelToColor
+const logLevelToColor = {
+    '[info]': BLUE,
+    '[warn]': YELLOW,
+    '[error]': RED,
+} as const
+
 export class Console {
     private editor: Editor
 
@@ -168,11 +175,9 @@ export class Console {
         })
     }
 
-    append(level: '[info]' | '[warn]' | '[error]', ...args: any[]) {
-        const levelText = c(level == '[warn]' ? YELLOW : level == '[error]' ? RED : '', level)
-
+    append(level: LogLevel, ...args: any[]) {
         const line =
-            levelText +
+            c(logLevelToColor[level], level) +
             ' ' +
             args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ') +
             '\n'
