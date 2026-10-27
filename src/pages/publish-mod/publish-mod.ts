@@ -1,6 +1,6 @@
 import '../../main'
 import { addLogoutListener, getGithubToken, isLoggedIn } from '../../auth'
-import { Console, dbSelect, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
+import { Console, dbSelect, Editor, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
 import { githubAssetDownload } from '../../github-download'
 import { extractCCMod, type ExtractedCcmod } from '../../ccmoddb/zip'
 import { runModCheck } from '../check-mod/ccmod-check'
@@ -10,6 +10,7 @@ const loggedInDiv = document.getElementById('show-only-when-logged-in') as HTMLD
 const urlInput = document.getElementById('mod-url') as HTMLInputElement
 const sourceInput = document.getElementById('source') as HTMLInputElement
 const consoleMount = document.getElementById('console-output') as HTMLDivElement
+const ccmodPreviewMount = document.getElementById('ccmod-preview') as HTMLDivElement
 
 const checkButton = document.getElementById('check-button') as HTMLInputElement
 const publishButton = document.getElementById('publish-button') as HTMLInputElement
@@ -21,6 +22,11 @@ updateFormVisibility()
 addLogoutListener(() => updateFormVisibility())
 
 publishButton.disabled = true
+
+const ccmodPreviewEditor = new Editor({
+    mount: ccmodPreviewMount,
+    editable: false,
+})
 
 const con = new Console(consoleMount)
 con.hookWindowConsole()
@@ -60,6 +66,8 @@ async function check(): Promise<boolean> {
         con.append('[error]', errorMsg)
         return false
     }
+
+    ccmodPreviewEditor.setText(result.text)
 
     try {
         const stats = await runModCheck(con, result.text, getCurrentlySelectedDbName(), false)
