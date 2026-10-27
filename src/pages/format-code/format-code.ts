@@ -2,6 +2,8 @@ import '../../main'
 import { Editor, Console } from '../../ui-common'
 import { FAIL_SYM } from '../../colors-and-symbols'
 import { unzipSync } from 'fflate'
+import { KeyValueHttpCache } from '../../cache'
+import { sha256 } from '../../sha'
 
 const consoleMount = document.getElementById('console-output') as HTMLDivElement
 const inputMount = document.getElementById('input-code') as HTMLDivElement
@@ -10,14 +12,21 @@ const uploadBtn = document.getElementById('upload-btn') as HTMLButtonElement
 const fileInput = document.getElementById('file-input') as HTMLInputElement
 const downloadBtn = document.getElementById('download-btn') as HTMLButtonElement
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement
-const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement
+
+const cache = new KeyValueHttpCache('format-code-cache')
+const lebabCodeCacheKey = 'lebabCode'
+const inputCodeCacheKey = 'inputCode'
 
 const inputEditor = new Editor({
     mount: inputMount,
     editable: true,
     changeTimer: 100,
     language: 'javascript',
+    onChanged() {
+        void cache.set(inputCodeCacheKey, inputEditor.getText())
+    },
 })
+cache.get(inputCodeCacheKey).then(text => inputEditor.setText(text ?? ''))
 
 const outputEditor = new Editor({
     mount: outputMount,
@@ -59,41 +68,12 @@ downloadBtn.addEventListener('click', () => {
 
 runBtn.addEventListener('click', () => run())
 
-clearBtn.addEventListener('click', async () => {
-    /* TODO: this */
-    con.append('[info]', 'clearing cache...')
-})
-
-const cacheName = 'format-code-cache'
-async function cacheStringWithCacheAPI(key: string, value: string) {
-    const cache = await caches.open(cacheName)
-    const response = new Response(new Blob([value]), {
-        headers: { 'Content-Type': 'text/plain' },
-    })
-    await cache.put(key, response)
-}
-
-async function getStringFromCacheAPI(key: string): Promise<string | undefined> {
-    const cache = await caches.open(cacheName)
-    const response = await cache.match(key)
-    return response ? response.text() : undefined
-}
-
-async function sha256(message: string) {
-    const data = new TextEncoder().encode(message)
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-}
-
-const lebabCodeCacheKey = 'lebabCode'
-
 async function getInputCodeCacheKey(code: string): Promise<string> {
     return lebabCodeCacheKey + '_' + sha256(code)
 }
 
 async function getInputCode(inputCode: string, hash: string) {
-    const cachedCode = await getStringFromCacheAPI(hash)
+    const cachedCode = await cache.get(hash)
     if (cachedCode) {
         return { inputCode: cachedCode, runPrettierAndLebab: false }
     }
@@ -143,9 +123,9 @@ async function run() {
             typedefsFiles,
             onPartialCodeTransform: async (code, stage) => {
                 if (stage == 'postLebab') {
-                    void cacheStringWithCacheAPI(inputCodeFromEditorHash, code)
+                    void cache.set(inputCodeFromEditorHash, code)
                 }
-                outputEditor.setText(code)
+                // outputEditor.setText(code)
             },
         })
 
