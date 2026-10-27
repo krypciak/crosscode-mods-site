@@ -1,5 +1,6 @@
 import { githubClientId } from './config'
 import { takePkceVerifier, verifyOAuthState } from './auth-security'
+import { KeyValueStoreLocalStorage } from './cache'
 
 interface GithubTokenRequestSuccess {
     access_token: string
@@ -37,24 +38,12 @@ async function requestAccessTokenAndStore(
 
     if ('error' in json) throw new Error(json.error + ' ' + json.error_description)
 
-    storeAuthData({ acquiredAt: Date.now() / 1000, ...json })
+    authStorage.set('auth', { acquiredAt: Date.now() / 1000, ...json })
 
     return json
 }
 
-const authStorageKey = 'auth'
-async function storeAuthData(tokenData: StoredAuthData) {
-    localStorage.setItem(authStorageKey, JSON.stringify(tokenData))
-}
-async function getAuthData(): Promise<StoredAuthData | undefined> {
-    const str = localStorage.getItem(authStorageKey)
-    if (!str) return
-    try {
-        return JSON.parse(str) as StoredAuthData
-    } catch (e) {
-        console.error(e)
-    }
-}
+const authStorage = new KeyValueStoreLocalStorage<'auth', StoredAuthData>(Infinity)
 
 export async function checkForGithubCallback() {
     try {
@@ -85,7 +74,7 @@ export async function checkForGithubCallback() {
 let refreshPromise: Promise<GithubTokenRequestSuccess> | undefined
 export async function getGithubToken(): Promise<string | undefined> {
     const now = Date.now() / 1000
-    const data = await getAuthData()
+    const data = authStorage.get('auth')
     if (!data) return undefined
 
     if (data.acquiredAt + data.expires_in > now) return data.access_token
@@ -108,7 +97,7 @@ export async function getGithubToken(): Promise<string | undefined> {
 }
 
 export async function isLoggedIn() {
-    return (await getAuthData()) !== undefined
+    return authStorage.get('auth') !== undefined
 }
 
 export function logoutGithub() {
@@ -120,4 +109,4 @@ export function addLogoutListener(func: () => void) {
     logoutListeners.push(func)
 }
 
-addLogoutListener(() => localStorage.removeItem(authStorageKey))
+addLogoutListener(() => authStorage.clear())

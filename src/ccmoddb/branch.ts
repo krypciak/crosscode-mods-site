@@ -6,7 +6,7 @@ interface BranchConfig {
     branch: string
     parent?: Branch
 }
-class Branch {
+export class Branch {
     private cached?: Promise<PackageDB>
 
     constructor(public config: BranchConfig) {}
@@ -35,7 +35,7 @@ class Branch {
     }
 }
 
-const stable = new Branch({
+export const stable = new Branch({
     owner: 'CCDirectLink',
     repoName: 'CCModDB',
     branch: 'stable',

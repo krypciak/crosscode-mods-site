@@ -2,7 +2,7 @@ import '../../main'
 import { Editor, Console } from '../../ui-common'
 import { FAIL_SYM } from '../../colors-and-symbols'
 import { unzipSync } from 'fflate'
-import { KeyValueHttpCache } from '../../cache'
+import { KeyValueStoreHttpCache } from '../../cache'
 import { sha256 } from '../../sha'
 
 const consoleMount = document.getElementById('console-output') as HTMLDivElement
@@ -13,9 +13,10 @@ const fileInput = document.getElementById('file-input') as HTMLInputElement
 const downloadBtn = document.getElementById('download-btn') as HTMLButtonElement
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement
 
-const cache = new KeyValueHttpCache('format-code-cache')
+const cache = new KeyValueStoreHttpCache<string, string>('format-code-cache')
 const lebabCodeCacheKey = 'lebabCode'
 const inputCodeCacheKey = 'inputCode'
+cache.clear()
 
 const inputEditor = new Editor({
     mount: inputMount,

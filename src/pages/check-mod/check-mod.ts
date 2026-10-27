@@ -1,5 +1,5 @@
 import '../../main'
-import { dbSelect, Editor, Console, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
+import { dbSelect, Editor, Console, fillDbSelectWithOptions, getCurrentlySelectedBranch } from '../../ui-common'
 import { extractCCMod } from '../../ccmoddb/zip'
 import { FAIL_SYM } from '../../colors-and-symbols'
 import { runModCheck as runCCModCheck } from './ccmod-check'
@@ -10,7 +10,7 @@ const uploadBtn = document.getElementById('upload-btn') as HTMLButtonElement
 const fileInput = document.getElementById('file-input') as HTMLInputElement
 
 function runCheck() {
-    runCCModCheck(con, inputEditor.getText(), getCurrentlySelectedDbName())
+    runCCModCheck(con, inputEditor.getText(), getCurrentlySelectedBranch())
 }
 
 const inputEditor = new Editor({

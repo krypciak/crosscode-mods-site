@@ -172,6 +172,9 @@ form {
     flex: 1;
     display: flex;
     flex-direction: column;
+
+    min-height: 0;
+    overflow-y: auto;
 }
 
 #publish-form {
@@ -228,7 +231,7 @@ form {
     flex: 1;
     min-height: 0;
     min-width: 0;
-    gap: 0 12px; 
+    gap: 0 12px;
 }
 
 .panel {

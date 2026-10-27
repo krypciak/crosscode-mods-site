@@ -2,6 +2,7 @@ import { githubClientId } from './config'
 import { addLogoutListener, getGithubToken, isLoggedIn, logoutGithub } from './auth'
 import { setOAuthState, setPkceChallenge } from './auth-security'
 import { getUserInfo, type GithubUserInfo } from './user-info'
+import { githubUserInfoCache } from './ui-common'
 
 let defaultAvatarDataUri: string
 
@@ -30,7 +31,7 @@ export async function updateGithubUiElements() {
     const token = await getGithubToken()
     const loggedIn = !!token && (await isLoggedIn())
 
-    const userData = loggedIn ? await getUserInfo(token) : undefined
+    const userData = loggedIn ? await getUserInfo(token, githubUserInfoCache) : undefined
 
     updateUsernameSpan(userData)
     updateAvatarImage(userData)

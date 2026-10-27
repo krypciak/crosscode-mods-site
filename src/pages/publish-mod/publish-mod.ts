@@ -1,9 +1,19 @@
 import '../../main'
 import { addLogoutListener, getGithubToken, isLoggedIn } from '../../auth'
-import { Console, dbSelect, Editor, fillDbSelectWithOptions, getCurrentlySelectedDbName } from '../../ui-common'
+import {
+    Console,
+    dbSelect,
+    Editor,
+    fillDbSelectWithOptions,
+    getCurrentlySelectedBranch,
+    githubRepoInfoCache,
+    githubUserInfoCache,
+} from '../../ui-common'
 import { githubAssetDownload } from '../../github-download'
 import { extractCCMod, type ExtractedCcmod } from '../../ccmoddb/zip'
 import { runModCheck } from '../check-mod/ccmod-check'
+import type { PkgCCMod } from 'ccmoddb/build/src/types'
+import { doesUserHavePermissionToPublishThisCCMod, getUserInfo, isUserAdmin } from '../../user-info'
 
 const form = document.getElementById('publish-form') as HTMLFormElement
 const loggedInDiv = document.getElementById('show-only-when-logged-in') as HTMLDivElement
@@ -69,15 +79,37 @@ async function check(): Promise<boolean> {
 
     ccmodPreviewEditor.setText(result.text)
 
+    let ccmod: PkgCCMod
     try {
-        const stats = await runModCheck(con, result.text, getCurrentlySelectedDbName(), false)
-        const success = stats?.failCount == 0
+        const { tester, ccmod: ccmod1 } =
+            (await runModCheck(con, result.text, getCurrentlySelectedBranch(), false)) ?? {}
+        const success = tester?.failCount == 0
+        ccmod = ccmod1!
 
-        return success
+        if (!success) return false
     } catch (e) {
         con.append('[error]', 'error while checking ccmod', e)
         return false
     }
+
+    const token = await getGithubToken()
+    if (!token) return false
+
+    const userInfo = await getUserInfo(token, githubUserInfoCache)
+    if (!userInfo) {
+        con.append('[error]', `error fetching user info`)
+        return false
+    }
+
+    const branch = getCurrentlySelectedBranch()
+    const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
+    const hasPermission = await doesUserHavePermissionToPublishThisCCMod(ccmod!, userInfo, isAdmin)
+    if (!hasPermission) {
+        con.append('[error]', `the url of the mod indicates that you're not an owner of this mod!`)
+        return false
+    }
+
+    return true
 }
 
 async function publish() {
@@ -88,10 +120,10 @@ async function publish() {
 
     con.append('[info]', 'publish')
 
-    const branch = getCurrentlySelectedDbName()
+    const branch = getCurrentlySelectedBranch()
     const source = sourceInput.value?.trim() ?? ''
 
-    const submitSuccess = await submit({ token, url: modUrl, branch, source })
+    const submitSuccess = await submit({ token, url: modUrl, branch: branch.getName(), source })
     if (!submitSuccess) return
 
     con.append('[info]', `submitted!`)

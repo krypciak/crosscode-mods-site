@@ -1,20 +1,14 @@
-import type { PackageDB, PkgCCMod } from 'ccmoddb/build/src/types'
-import { branches } from '../../ccmoddb/branch'
+import type { PkgCCMod } from 'ccmoddb/build/src/types'
+import { Branch } from '../../ccmoddb/branch'
 import type { Console } from '../../ui-common'
 import { CCModChecker } from 'ccmoddb/build/tests/ccmod-check'
 import { Tester } from '../../ccmoddb/test-functions'
 import { FAIL_SYM, PASS_SYM } from '../../colors-and-symbols'
 
-async function getDatabases(dbName: string): Promise<PackageDB[]> {
-    const branch = branches[dbName]
-    if (!branch) throw new Error()
-    return branch.getDbs()
-}
-
 export async function runModCheck(
     con: Console | undefined,
     input: string,
-    dbName: string,
+    branch: Branch,
     standalonePrint: boolean = true,
     silent: boolean = false
 ) {
@@ -31,7 +25,7 @@ export async function runModCheck(
         return
     }
     if (standalonePrint) con?.clear()
-    const databases = await getDatabases(dbName)
+    const databases = await branch.getDbs()
     const tester = new Tester(silent)
     const ccmodChecker = new CCModChecker(databases, tester.test, tester.expect)
     if (standalonePrint) con?.append('[info]', `running (${new Date().toLocaleString()})...`)
@@ -39,9 +33,9 @@ export async function runModCheck(
     ccmodChecker.testMetadataCCMod(ccmod)
 
     if (tester.failCount == 0) {
-        con?.append('[info]', PASS_SYM, 'success')
+        con?.append('[info]', PASS_SYM, 'ccmod.json valid!')
     } else {
         con?.append('[error]', FAIL_SYM, 'tests failed!')
     }
-    return tester
+    return { tester, ccmod }
 }

@@ -245,7 +245,7 @@
 
     "call-bound": ["call-bound@1.0.4", "", { "dependencies": { "call-bind-apply-helpers": "^1.0.2", "get-intrinsic": "^1.3.0" } }, "sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg=="],
 
-    "ccmoddb": ["ccmoddb@github:CCDirectLink/CCModDB#7f89a63", { "dependencies": { "@types/semver": "^7.8.0", "bun": "^1.4.2", "semver": "^7.8.5", "simple-git": "^4.0.2", "yauzl": "^3.4.0" } }, "CCDirectLink-CCModDB-7f89a63", "sha512-djsknDHQP3qxDfXo8LXel54yP0FMn/6Y7nygZFCq8SEm5z5SSh1FosPWBf2HwTjYJUoy9gj5YUG5gBUvhZVR9g=="],
+    "ccmoddb": ["ccmoddb@github:CCDirectLink/CCModDB#1a96b8d", { "dependencies": { "@types/semver": "^7.8.0", "bun": "^1.4.2", "semver": "^7.8.5", "simple-git": "^4.0.2", "yauzl": "^3.4.0" } }, "CCDirectLink-CCModDB-1a96b8d", "sha512-jBGGGbWRLWjnGrTsa/SrJy+XLvxx5bwW/XAQpBcsh4pOnj/Dvdp3uBfW7P1ak/ks2oUmYYnV33URBgPNx2NBjQ=="],
 
     "cipher-base": ["cipher-base@1.0.7", "", { "dependencies": { "inherits": "^2.0.4", "safe-buffer": "^5.2.1", "to-buffer": "^1.2.2" } }, "sha512-Mz9QMT5fJe7bKI7MH31UilT5cEK5EHHRCccw/YRFsRY47AuNgaV6HY3rscp0/I4Q+tTW/5zoqpSeRRI54TkDWA=="],
 
@@ -505,7 +505,7 @@
 
     "punycode": ["punycode@1.4.1", "", {}, "sha512-jmYNElW7yvO7TV33CjSmvSiE2yco3bV2czu/OzDKdMNVZQWfxCblURLhf+47syQRBntjfLdd/H0egrzIG+oaFQ=="],
 
-    "qs": ["qs@6.16.1", "", { "dependencies": { "es-define-property": "^1.0.1", "side-channel": "^1.1.1" } }, "sha512-5Px6J7rfHBAGUhNQ3es4YzcOdBBw0SDcVtThJml4RdnKw4tKs2epA0kPZ+K8X+WiHktT93RHVcQ/3ym5aTCgtg=="],
+    "qs": ["qs@6.17.0", "", { "dependencies": { "es-define-property": "^1.0.1", "side-channel": "^1.1.1" } }, "sha512-5LK5BZ2XDHMvcUJaf0CQ5HL3aVgKbpklvByC7qLSxYkfE8COEEbJg5xCHWCTqzqi0Gs4Jn5Mv5v3R38W6edscA=="],
 
     "querystring-es3": ["querystring-es3@0.2.1", "", {}, "sha512-773xhDQnZBMFobEiztv8LIl70ch5MSF/jUQVlhwFyBILqq96anmoctVIYz+ZRp0qbCKATTn6ev02M3r7Ga5vqA=="],
 

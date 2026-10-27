@@ -1,16 +1,22 @@
-import { branches } from './ccmoddb/branch'
+import { Branch, branches } from './ccmoddb/branch'
 import { EditorView, basicSetup } from 'codemirror'
 import { Range, EditorState, StateEffect, StateField, type Extension } from '@codemirror/state'
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { Decoration, type DecorationSet } from '@codemirror/view'
-import { BLUE, c, GREEN, RED, YELLOW } from './colors-and-symbols'
+import { BLUE, c, RED, YELLOW } from './colors-and-symbols'
 import { javascript } from '@codemirror/lang-javascript'
+import { addLogoutListener } from './auth'
+import { KeyValueStoreLocalStorage } from './cache'
+import type { GithubUserInfo, GithubRepoInfo } from './user-info'
 
 export const dbSelect = document.getElementById('db-select') as HTMLSelectElement
 
-export function getCurrentlySelectedDbName(): string {
-    return dbSelect.value
+export function getCurrentlySelectedBranch(): Branch {
+    const branchName = dbSelect.value
+    const branch = branches[branchName]
+    if (!branch) throw new Error('unknown branch: ' + branchName)
+    return branch
 }
 
 export function fillDbSelectWithOptions() {
@@ -24,6 +30,14 @@ export function fillDbSelectWithOptions() {
     }
     dbSelect.value = Object.keys(branches)[0]
 }
+
+export const githubUserInfoCache = new KeyValueStoreLocalStorage<'github_user', GithubUserInfo>(1000 * 60 * 60 * 8)
+export const githubRepoInfoCache = new KeyValueStoreLocalStorage<string, GithubRepoInfo>(1000 * 60 * 60 * 8)
+
+addLogoutListener(() => {
+    githubUserInfoCache.clear()
+    githubRepoInfoCache.clear()
+})
 
 export class Editor {
     view: EditorView
