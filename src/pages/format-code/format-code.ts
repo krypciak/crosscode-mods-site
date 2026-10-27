@@ -4,6 +4,7 @@ import { FAIL_SYM } from '../../colors-and-symbols'
 import { unzipSync } from 'fflate'
 import { KeyValueStoreHttpCache } from '../../cache'
 import { sha256 } from '../../sha'
+import { getErrorMessage } from '../../error-msg'
 
 const consoleMount = document.getElementById('console-output') as HTMLDivElement
 const inputMount = document.getElementById('input-code') as HTMLDivElement
@@ -16,7 +17,6 @@ const runBtn = document.getElementById('run-btn') as HTMLButtonElement
 const cache = new KeyValueStoreHttpCache<string, string>('format-code-cache')
 const lebabCodeCacheKey = 'lebabCode'
 const inputCodeCacheKey = 'inputCode'
-cache.clear()
 
 const inputEditor = new Editor({
     mount: inputMount,
@@ -47,7 +47,7 @@ fileInput.addEventListener('change', async () => {
         const text = await file.text()
         inputEditor.setText(text)
     } catch (e) {
-        const errorMsg = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
+        const errorMsg = getErrorMessage(e)
         con.append('[error]', `${FAIL_SYM} ${errorMsg} in ${file.name}`)
     }
 })

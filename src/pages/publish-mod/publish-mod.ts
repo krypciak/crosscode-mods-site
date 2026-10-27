@@ -11,9 +11,12 @@ import {
 } from '../../ui-common'
 import { githubAssetDownload } from '../../github-download'
 import { extractCCMod, type ExtractedCcmod } from '../../ccmoddb/zip'
-import { runModCheck } from '../check-mod/ccmod-check'
 import type { PkgCCMod } from 'ccmoddb/build/src/types'
-import { doesUserHavePermissionToPublishThisCCMod, getUserInfo, isUserAdmin } from '../../user-info'
+import { getUserInfo, isUserAdmin } from '../../user-info'
+import { getErrorMessage } from '../../error-msg'
+import { ccmodCheck } from '../../ccmoddb/ccmod-check'
+import { ccmodModPublishCheck } from '../../ccmoddb/mod-publish-check'
+import { PASS_SYM } from '../../colors-and-symbols'
 
 const form = document.getElementById('publish-form') as HTMLFormElement
 const loggedInDiv = document.getElementById('show-only-when-logged-in') as HTMLDivElement
@@ -62,7 +65,7 @@ async function check(): Promise<boolean> {
         new URL(modUrl)
         modArchive = await githubAssetDownload(modUrl)
     } catch (e) {
-        con.append('[error]', 'invalid url!', e)
+        con.append('[error]', 'invalid url!', getErrorMessage(e))
         return false
     }
     con.append('[info]', 'downloaded')
@@ -72,21 +75,21 @@ async function check(): Promise<boolean> {
     try {
         result = extractCCMod(modArchive, isCCMod, source)
     } catch (e) {
-        const errorMsg = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
-        con.append('[error]', errorMsg)
+        con.append('[error]', getErrorMessage(e))
         return false
     }
 
     ccmodPreviewEditor.setText(result.text)
 
+    const branch = getCurrentlySelectedBranch()
     let ccmod: PkgCCMod
     try {
-        const { tester, ccmod: ccmod1 } =
-            (await runModCheck(con, result.text, getCurrentlySelectedBranch(), false)) ?? {}
-        const success = tester?.failCount == 0
-        ccmod = ccmod1!
-
-        if (!success) return false
+        const res = await ccmodCheck({
+            ccmodText: result.text,
+            branch,
+            log: text => con.append('[info]', text),
+        })
+        ccmod = res.ccmod
     } catch (e) {
         con.append('[error]', 'error while checking ccmod', e)
         return false
@@ -95,19 +98,18 @@ async function check(): Promise<boolean> {
     const token = await getGithubToken()
     if (!token) return false
 
-    const userInfo = await getUserInfo(token, githubUserInfoCache)
-    if (!userInfo) {
-        con.append('[error]', `error fetching user info`)
+    try {
+        await ccmodModPublishCheck({
+            ccmod,
+            getUserInfo: () => getUserInfo(token, githubUserInfoCache),
+            isUserAdmin: () => isUserAdmin(token, branch, githubRepoInfoCache),
+        })
+    } catch (e) {
+        con.append('[error]', getErrorMessage(e))
         return false
     }
 
-    const branch = getCurrentlySelectedBranch()
-    const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
-    const hasPermission = await doesUserHavePermissionToPublishThisCCMod(ccmod!, userInfo, isAdmin)
-    if (!hasPermission) {
-        con.append('[error]', `the url of the mod indicates that you're not an owner of this mod!`)
-        return false
-    }
+    con.append('[info]', PASS_SYM, 'all checks passed!')
 
     return true
 }
@@ -160,8 +162,7 @@ async function submit(args: { token: string; url: string; branch: string; source
         }
         return true
     } catch (e) {
-        const errorMsg = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
-        con.append('[error]', errorMsg)
+        con.append('[error]', getErrorMessage(e))
         return false
     }
 }

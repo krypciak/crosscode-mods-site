@@ -1,7 +1,10 @@
+import { getErrorMessage } from '../error-msg'
+
 // accepted: https://github.com/{owner}/{repo}/archive/... and https://github.com/{owner}/{repo}/releases/download/...
 // examples:
 //  https://github.com/CCDirectLink/CCLoader/archive/refs/tags/v2.26.1/v2.14.4.zip
 //  https://github.com/krypciak/cc-fancy-crash/releases/download/v1.1.0/cc-fancy-crash-1.1.0.ccmod
+
 //  https://github.com/CCDirectLink/Blades/archive/1.6.0.zip
 const allowedDownloadPattern = /^\/[^/]+\/[^/]+\/(archive\/|releases\/download\/)/
 
@@ -35,7 +38,7 @@ export async function handleGithubDownload(req: Request) {
 
         return new Response(upstream.body, { status: upstream.status, headers })
     } catch (e) {
-        const message = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
+        const message = getErrorMessage(e)
         return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
     }
 }

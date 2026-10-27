@@ -1,16 +1,12 @@
 import { KeyValueStoreInMemory } from '../cache'
-import { Branch, branches } from '../ccmoddb/branch'
+import { branches } from '../ccmoddb/branch'
+import { ccmodCheck } from '../ccmoddb/ccmod-check'
+import { ccmodModPublishCheck } from '../ccmoddb/mod-publish-check'
 import { extractCCMod } from '../ccmoddb/zip'
-import { runModCheck } from '../pages/check-mod/ccmod-check'
-import {
-    type GithubUserInfo,
-    type GithubRepoInfo,
-    doesUserHavePermissionToPublishThisCCMod,
-    getUserInfo,
-    isUserAdmin,
-} from '../user-info'
+import { getErrorMessage } from '../error-msg'
+import { type GithubUserInfo, type GithubRepoInfo, getUserInfo, isUserAdmin } from '../user-info'
 
-const userInfoCache = new KeyValueStoreInMemory<string, GithubUserInfo>(1000 * 60 * 60 * 8)
+const githubUserInfoCache = new KeyValueStoreInMemory<string, GithubUserInfo>(1000 * 60 * 60 * 8)
 const githubRepoInfoCache = new KeyValueStoreInMemory<string, GithubRepoInfo>(1000 * 60 * 60 * 8)
 
 export async function handleModPublishRequest(req: Request) {
@@ -32,33 +28,23 @@ export async function handleModPublishRequest(req: Request) {
         const source: string = body.source
         if (source === undefined) throw new Error('missing "source" query parameter')
 
-        const { success: ccmodOk, ccmod } = await checkCCMod(modUrl, branch)
-        if (!ccmodOk) throw new Error('ccmod.json check failed')
+        const resp = await fetch(modUrl)
+        const modArchive = await resp.bytes()
 
-        const userInfo = await getUserInfo(token, userInfoCache)
-        if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
+        const isCCMod = modUrl.endsWith('.ccmod')
+        const { text: ccmodText } = extractCCMod(modArchive, isCCMod)
 
-        const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
-        const hasPermission = await doesUserHavePermissionToPublishThisCCMod(ccmod!, userInfo, isAdmin)
-        if (!hasPermission) throw new Error('user has no permission to publish this ccmod')
+        const { ccmod } = await ccmodCheck({ ccmodText, branch })
+
+        await ccmodModPublishCheck({
+            ccmod,
+            getUserInfo: () => getUserInfo(token, githubUserInfoCache),
+            isUserAdmin: () => isUserAdmin(token, branch, githubRepoInfoCache),
+        })
 
         return new Response('success', { status: 200 })
     } catch (e) {
-        const message = typeof e == 'object' && e && 'message' in e && typeof e.message == 'string' ? e.message : ''
+        const message = getErrorMessage(e)
         return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
     }
-}
-
-/* TODO: check if submitted is a newer version */
-async function checkCCMod(modUrl: string, branch: Branch) {
-    const resp = await fetch(modUrl)
-    const modArchive = await resp.bytes()
-
-    const isCCMod = modUrl.endsWith('.ccmod')
-    const result = extractCCMod(modArchive, isCCMod)
-
-    const { tester, ccmod } = (await runModCheck(undefined, result.text, branch, false, true)) ?? {}
-    const success = tester?.failCount == 0
-
-    return { success, ccmod }
 }
