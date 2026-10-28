@@ -13,38 +13,46 @@
             <section id="main-content">
                 <h1 id="login-notice" hidden="true">You must login first to submit a mod</h1>
                 <div id="show-only-when-logged-in">
-                    <form id="publish-form">
-                        <div class="form-row grow">
-                            <label for="mod-url">mod url</label>
-                            <input
-                                type="text"
-                                id="mod-url"
-                                placeholder="https://github.com/CCDirectLink/CCModManager/releases/download/v1.2.1/ccmodmanager-1.2.1.ccmod"
-                                required
-                            />
-                        </div>
+                    <div class="publish-layout">
+                        <form id="publish-form">
+                            <div class="form-row grow">
+                                <label for="mod-url">mod url</label>
+                                <input
+                                    type="text"
+                                    id="mod-url"
+                                    placeholder="https://github.com/CCDirectLink/CCModManager/releases/download/v1.2.1/ccmodmanager-1.2.1.ccmod"
+                                    required
+                                />
+                            </div>
 
-                        <div class="form-row">
-                            <!--shared-db-select-->
-                        </div>
+                            <div class="form-row">
+                                <!--shared-db-select-->
+                            </div>
 
-                        <div class="form-row grow">
-                            <label for="source">source (optional)</label>
-                            <input type="text" id="source" />
-                        </div>
+                            <div class="form-row grow">
+                                <label for="source">source (optional)</label>
+                                <input type="text" id="source" />
+                            </div>
 
-                        <div class="form-row">
-                            <button type="submit" id="check-button">Check</button>
-                            <button type="submit" id="publish-button" disabled>Publish</button>
-                        </div>
-                    </form>
+                            <div class="form-row">
+                                <button type="submit" id="check-button">Check</button>
+                                <button type="submit" id="publish-button" disabled>Publish</button>
+                            </div>
+                        </form>
 
-                    <div class="panels">
-                        <section class="panel">
-                            <label for="ccmod-preview">ccmod.json (preview)</label>
-                            <div id="ccmod-preview" class="editor-mount"></div>
-                        </section>
+                        <aside class="requests-sidebar">
+                            <h2 class="requests-title">Pending requests:</h2>
+                            <div class="placeholder-container" id="publish-requests"></div>
+                        </aside>
+
+                        <div class="panels">
+                            <section class="panel">
+                                <label for="ccmod-preview">ccmod.json (preview)</label>
+                                <div id="ccmod-preview" class="editor-mount"></div>
+                            </section>
+                        </div>
                     </div>
+
                     <section class="console-section">
                         <label for="console-output">console</label>
                         <br />

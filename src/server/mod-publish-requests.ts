@@ -12,10 +12,11 @@ export interface ModPublishRequest {
 }
 
 const requestsFile = './mod-publish-requests.json'
-export const modPublishRequests: Record<string, ModPublishRequest> = await readRequestsFromDisk()
+export type ModPublishRequestsRecord = Record<string, ModPublishRequest>
+export const modPublishRequests: ModPublishRequestsRecord = await readRequestsFromDisk()
 
 async function readRequestsFromDisk() {
-    let requests: Record<string, ModPublishRequest> = {}
+    let requests: ModPublishRequestsRecord = {}
     try {
         requests = JSON.parse(await readFile(requestsFile, 'utf-8'))
     } catch (e) {}

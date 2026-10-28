@@ -16,7 +16,7 @@ import { getErrorMessage } from '../../error-msg'
 import { ccmodCheck } from '../../ccmoddb/ccmod-check'
 import { PASS_SYM } from '../../colors-and-symbols'
 import { ccmodModPublishCheck } from '../../ccmoddb/mod-publish-check'
-import { githubAssetDownload, submitModPublishRequest } from '../../server-endpoints'
+import { fetchModPublishRequests, githubAssetDownload, submitModPublishRequest } from '../../server-endpoints'
 
 const form = document.getElementById('publish-form') as HTMLFormElement
 const loggedInDiv = document.getElementById('show-only-when-logged-in') as HTMLDivElement
@@ -43,6 +43,15 @@ const ccmodPreviewEditor = new Editor({
 
 const con = new Console(consoleMount)
 con.hookWindowConsole()
+
+fetchModPublishRequestsAndUpdateUi()
+
+async function fetchModPublishRequestsAndUpdateUi() {
+    const requestsRecord = await fetchModPublishRequests()
+    const requests = Object.values(requestsRecord).sort((a, b) => b.submitDate - a.submitDate)
+
+    console.log(requests)
+}
 
 async function updateFormVisibility() {
     const loggedIn = await isLoggedIn()
@@ -133,6 +142,8 @@ async function publish(): Promise<void> {
     }
 
     con.append('[info]', `submitted!`)
+
+    await fetchModPublishRequestsAndUpdateUi()
 }
 
 function hookButtons() {

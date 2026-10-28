@@ -1,4 +1,4 @@
-import { getErrorMessage } from './error-msg'
+import type { ModPublishRequestsRecord } from './server/mod-publish-requests'
 
 export async function fetchUltimateCrosscodeTypedefsZip(): Promise<Uint8Array> {
     const resp = await fetch('/ultimate-crosscode-typedefs.zip')
@@ -52,4 +52,14 @@ export async function submitModPublishRequest(args: { token: string; url: string
         }
         throw new Error(`${resp.status} ${resp.statusText} ${await resp.text()}`)
     }
+}
+
+export async function fetchModPublishRequests(): Promise<ModPublishRequestsRecord> {
+    const resp = await fetch('/get-mod-publish-requests', {
+        method: 'GET',
+    })
+    if (!resp.ok) throw new Error(`Download failed: ${resp.status} ${resp.statusText}`)
+
+    const json: ModPublishRequestsRecord = await resp.json()
+    return json
 }

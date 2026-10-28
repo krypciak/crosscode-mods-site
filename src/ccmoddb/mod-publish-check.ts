@@ -18,7 +18,7 @@ export async function ccmodModPublishCheck({
     if (!hasPermission) throw new Error('user has no permission to publish this ccmod')
 
     const highestVersionPackage = await branch.getHighestVersionPackageAvailable(ccmod.id)
-    if (!highestVersionPackage || !gt(ccmod.version!, highestVersionPackage!.metadataCCMod!.version)) {
+    if (highestVersionPackage && !gt(ccmod.version!, highestVersionPackage.metadataCCMod!.version)) {
         throw new Error(
             `did you forget to bump the version? ` +
                 `a mod with the same or higher version ("${highestVersionPackage!.metadataCCMod!.version}") already exists on this branch!`

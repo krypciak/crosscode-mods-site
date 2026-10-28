@@ -44,6 +44,8 @@ export class Branch {
             if (pkg) packages.push(pkg)
         }
 
+        if (packages.length == 0) return undefined
+
         let highestVersionPkg: Package = packages[0]
         for (let i = 1; i < packages.length; i++) {
             const pkg = packages[i]
