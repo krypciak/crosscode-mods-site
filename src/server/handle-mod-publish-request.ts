@@ -4,7 +4,9 @@ import { ccmodCheck } from '../ccmoddb/ccmod-check'
 import { ccmodModPublishCheck } from '../ccmoddb/mod-publish-check'
 import { extractCCMod } from '../ccmoddb/zip'
 import { getErrorMessage } from '../error-msg'
+import { sha256 } from '../sha'
 import { type GithubUserInfo, type GithubRepoInfo, getUserInfo, isUserAdmin } from '../user-info'
+import { pushModPublishRequest } from './mod-publish-requests'
 
 const githubUserInfoCache = new KeyValueStoreInMemory<string, GithubUserInfo>(1000 * 60 * 60 * 8)
 const githubRepoInfoCache = new KeyValueStoreInMemory<string, GithubRepoInfo>(1000 * 60 * 60 * 8)
@@ -36,11 +38,22 @@ export async function handleModPublishRequest(req: Request) {
 
         const { ccmod } = await ccmodCheck({ ccmodText, branch })
 
-        await ccmodModPublishCheck({
+        const userInfo = await getUserInfo(token, githubUserInfoCache)
+        if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
+        const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
+
+        await ccmodModPublishCheck({ ccmod, branch, userInfo, isAdmin })
+
+        const modArchiveHash = await sha256(modArchive)
+
+        await pushModPublishRequest({
+            user: userInfo.login,
+            modUrl,
             ccmod,
-            branch,
-            getUserInfo: () => getUserInfo(token, githubUserInfoCache),
-            isUserAdmin: () => isUserAdmin(token, branch, githubRepoInfoCache),
+            branchName,
+            source,
+            modArchiveHash,
+            submitDate: Date.now(),
         })
 
         return new Response('success', { status: 200 })

@@ -1,4 +1,5 @@
 import { handleAccessToken } from './handle-access-token'
+import { handleGetModPublishRequests } from './handle-get-mod-publish-requests'
 import { handleGithubDownload } from './handle-github-download'
 import { handleModPublishRequest } from './handle-mod-publish-request'
 
@@ -9,5 +10,6 @@ Bun.serve({
         '/access_token': { POST: handleAccessToken },
         '/gh': { GET: handleGithubDownload },
         '/mod-publish-request': { POST: handleModPublishRequest },
+        '/get-mod-publish-requests': { GET: handleGetModPublishRequests },
     },
 })

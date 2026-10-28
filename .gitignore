@@ -26,3 +26,4 @@ dist-ssr
 secret.conf
 .env
 nginx/tmp
+mod-publish-requests.json

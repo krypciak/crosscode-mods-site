@@ -6,18 +6,14 @@ import { gt } from 'semver'
 export async function ccmodModPublishCheck({
     ccmod,
     branch,
-    getUserInfo,
-    isUserAdmin,
+    userInfo,
+    isAdmin,
 }: {
     ccmod: PkgCCMod
     branch: Branch
-    getUserInfo: () => Promise<GithubUserInfo | undefined>
-    isUserAdmin: () => Promise<boolean>
+    userInfo: GithubUserInfo
+    isAdmin: boolean
 }) {
-    const userInfo = await getUserInfo()
-    if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
-
-    const isAdmin = await isUserAdmin()
     const hasPermission = await doesUserHavePermissionToPublishThisCCMod(ccmod, userInfo, isAdmin)
     if (!hasPermission) throw new Error('user has no permission to publish this ccmod')
 

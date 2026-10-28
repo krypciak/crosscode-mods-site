@@ -15,8 +15,8 @@ import type { PkgCCMod } from 'ccmoddb/build/src/types'
 import { getUserInfo, isUserAdmin } from '../../user-info'
 import { getErrorMessage } from '../../error-msg'
 import { ccmodCheck } from '../../ccmoddb/ccmod-check'
-import { ccmodModPublishCheck } from '../../ccmoddb/mod-publish-check'
 import { PASS_SYM } from '../../colors-and-symbols'
+import { ccmodModPublishCheck } from '../../ccmoddb/mod-publish-check'
 
 const form = document.getElementById('publish-form') as HTMLFormElement
 const loggedInDiv = document.getElementById('show-only-when-logged-in') as HTMLDivElement
@@ -99,12 +99,11 @@ async function check(): Promise<boolean> {
     if (!token) return false
 
     try {
-        await ccmodModPublishCheck({
-            ccmod,
-            branch,
-            getUserInfo: () => getUserInfo(token, githubUserInfoCache),
-            isUserAdmin: () => isUserAdmin(token, branch, githubRepoInfoCache),
-        })
+        const userInfo = await getUserInfo(token, githubUserInfoCache)
+        if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
+
+        const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
+        await ccmodModPublishCheck({ ccmod, branch, userInfo, isAdmin })
     } catch (e) {
         con.append('[error]', getErrorMessage(e))
         return false
