@@ -5,6 +5,7 @@ import { unzipSync } from 'fflate'
 import { KeyValueStoreHttpCache } from '../../cache'
 import { sha256 } from '../../sha'
 import { getErrorMessage } from '../../error-msg'
+import { fetchUltimateCrosscodeTypedefsZip } from '../../server-endpoints'
 
 const consoleMount = document.getElementById('console-output') as HTMLDivElement
 const inputMount = document.getElementById('input-code') as HTMLDivElement
@@ -80,12 +81,6 @@ async function getInputCode(inputCode: string, hash: string) {
     }
 
     return { inputCode, runPrettierAndLebab: true }
-}
-
-async function fetchUltimateCrosscodeTypedefsZip() {
-    const resp = await fetch('/ultimate-crosscode-typedefs.zip')
-    const data = await resp.bytes()
-    return data
 }
 
 async function getTypedefsFiles(): Promise<Record<string, string>> {

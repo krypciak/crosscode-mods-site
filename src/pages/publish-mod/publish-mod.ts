@@ -9,7 +9,6 @@ import {
     githubRepoInfoCache,
     githubUserInfoCache,
 } from '../../ui-common'
-import { githubAssetDownload } from '../../github-download'
 import { extractCCMod, type ExtractedCcmod } from '../../ccmoddb/zip'
 import type { PkgCCMod } from 'ccmoddb/build/src/types'
 import { getUserInfo, isUserAdmin } from '../../user-info'
@@ -17,6 +16,7 @@ import { getErrorMessage } from '../../error-msg'
 import { ccmodCheck } from '../../ccmoddb/ccmod-check'
 import { PASS_SYM } from '../../colors-and-symbols'
 import { ccmodModPublishCheck } from '../../ccmoddb/mod-publish-check'
+import { githubAssetDownload, submitModPublishRequest } from '../../server-endpoints'
 
 const form = document.getElementById('publish-form') as HTMLFormElement
 const loggedInDiv = document.getElementById('show-only-when-logged-in') as HTMLDivElement
@@ -114,7 +114,7 @@ async function check(): Promise<boolean> {
     return true
 }
 
-async function publish() {
+async function publish(): Promise<void> {
     const modUrl = urlInput.value.trim()
 
     const token = await getGithubToken()
@@ -125,8 +125,12 @@ async function publish() {
     const branch = getCurrentlySelectedBranch()
     const source = sourceInput.value?.trim() ?? ''
 
-    const submitSuccess = await submit({ token, url: modUrl, branch: branch.getName(), source })
-    if (!submitSuccess) return
+    try {
+        await submitModPublishRequest({ token, url: modUrl, branch: branch.getName(), source })
+    } catch (e) {
+        con.append('[error]', getErrorMessage(e))
+        return
+    }
 
     con.append('[info]', `submitted!`)
 }
@@ -145,24 +149,4 @@ function hookButtons() {
 
     publishButton.onclick = publish
     form.onsubmit = () => false
-}
-
-async function submit(args: { token: string; url: string; branch: string; source: string }): Promise<boolean> {
-    try {
-        const resp = await fetch('/mod-publish-request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(args),
-        })
-        if (!resp.ok) {
-            if (resp.status == 502 || resp.status == 404) {
-                throw new Error('the server is probably down?')
-            }
-            throw new Error(`${resp.status} ${resp.statusText} ${await resp.text()}`)
-        }
-        return true
-    } catch (e) {
-        con.append('[error]', getErrorMessage(e))
-        return false
-    }
 }

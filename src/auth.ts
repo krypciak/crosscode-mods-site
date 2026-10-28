@@ -1,21 +1,7 @@
 import { githubClientId } from './config'
 import { takePkceVerifier, verifyOAuthState } from './auth-security'
 import { KeyValueStoreLocalStorage } from './cache'
-
-interface GithubTokenRequestSuccess {
-    access_token: string
-    expires_in: number
-    refresh_token: string
-    refresh_token_expires_in: number
-    token_type: 'bearer'
-    scope: string
-}
-export type GithubTokenRequest =
-    | {
-          error: string
-          error_description: string
-      }
-    | GithubTokenRequestSuccess
+import { fetchProxiedAccessToken, type GithubTokenRequestSuccess } from './server-endpoints'
 
 type StoredAuthData = { acquiredAt: number } & GithubTokenRequestSuccess
 
@@ -29,12 +15,7 @@ async function requestAccessTokenAndStore(
             : { grant_type: 'refresh_token', refresh_token: config.refresh_token }),
     })
 
-    const headers: HeadersInit = { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }
-
-    const resp = await fetch('/access_token', { method: 'POST', headers, body })
-    if (!resp.ok) throw new Error(resp.status + ' ' + resp.statusText)
-
-    const json: GithubTokenRequest = await resp.json()
+    const json = await fetchProxiedAccessToken(body)
 
     if ('error' in json) throw new Error(json.error + ' ' + json.error_description)
 
