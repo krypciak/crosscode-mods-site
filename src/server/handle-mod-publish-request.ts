@@ -42,7 +42,7 @@ export async function handleModPublishRequest(req: Request) {
         if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
         const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
 
-        await ccmodModPublishCheck({ ccmod, branch, userInfo, isAdmin })
+        const { highestVersionPackage } = await ccmodModPublishCheck({ ccmod, branch, userInfo, isAdmin })
 
         const modArchiveHash = await sha256(modArchive)
 
@@ -50,6 +50,7 @@ export async function handleModPublishRequest(req: Request) {
             user: userInfo.login,
             modUrl,
             ccmod,
+            oldVersion: highestVersionPackage?.metadataCCMod!.version,
             branchName,
             source,
             modArchiveHash,

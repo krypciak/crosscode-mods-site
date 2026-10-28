@@ -24,4 +24,6 @@ export async function ccmodModPublishCheck({
                 `a mod with the same or higher version ("${highestVersionPackage!.metadataCCMod!.version}") already exists on this branch!`
         )
     }
+
+    return { highestVersionPackage }
 }

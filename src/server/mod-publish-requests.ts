@@ -4,6 +4,7 @@ import { readFile, rename, unlink } from 'node:fs/promises'
 export interface ModPublishRequest {
     user: string
     ccmod: PkgCCMod
+    oldVersion?: string
     modUrl: string
     branchName: string
     source: string
