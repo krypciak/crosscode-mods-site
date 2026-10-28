@@ -2,6 +2,7 @@ export interface KeyValueStore<K, V> {
     set(key: K, value: V): void | Promise<void>
     get(key: K): V | undefined | Promise<V | undefined>
     clear(): void | Promise<void>
+    delete(key: K): void
 }
 
 export class KeyValueStoreHttpCache<K extends string, V> implements KeyValueStore<K, V> {
@@ -19,6 +20,11 @@ export class KeyValueStoreHttpCache<K extends string, V> implements KeyValueStor
         const cache = await caches.open(this.cacheKey)
         const response = await cache.match(key)
         return response ? response.json() : undefined
+    }
+
+    async delete(key: K): Promise<void> {
+        const cache = await caches.open(this.cacheKey)
+        await cache.delete(key)
     }
 
     async clear(): Promise<void> {
@@ -47,13 +53,17 @@ export class KeyValueStoreInMemory<K, V> implements KeyValueStore<K, V> {
         return entry.value
     }
 
+    delete(key: K): void {
+        this.cache.delete(key)
+    }
+
     clear(): void {
         this.cache.clear()
     }
 }
 
 export class KeyValueStoreLocalStorage<K extends string, V> implements KeyValueStore<K, V> {
-    private keys = new Set<string>()
+    private keys = new Set<K>()
 
     constructor(private ttlMs: number) {}
 
@@ -71,11 +81,17 @@ export class KeyValueStoreLocalStorage<K extends string, V> implements KeyValueS
             localStorage.removeItem(key)
             return undefined
         }
+        this.keys.add(key)
 
         return JSON.parse(json.value)
     }
-    clear(): void {
-        for (const key of this.keys) localStorage.removeItem(key)
+
+    clear(): void | Promise<void> {
+        for (const key of this.keys) this.delete(key)
         this.keys.clear()
+    }
+
+    delete(key: K) {
+        localStorage.removeItem(key)
     }
 }
