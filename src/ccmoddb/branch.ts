@@ -1,4 +1,5 @@
-import type { PackageDB } from 'ccmoddb/build/src/types'
+import type { Package, PackageDB } from 'ccmoddb/build/src/types'
+import gt from 'semver/functions/gt'
 
 interface BranchConfig {
     owner: string
@@ -32,6 +33,27 @@ export class Branch {
 
     getName() {
         return '@' + this.config.owner + '/' + this.config.repoName + '/' + this.config.branch
+    }
+
+    async getHighestVersionPackageAvailable(modId: string): Promise<Package | undefined> {
+        const dbs = await this.getDbs()
+
+        const packages: Package[] = []
+        for (const db of dbs) {
+            const pkg = db[modId]
+            if (pkg) packages.push(pkg)
+        }
+
+        let highestVersionPkg: Package = packages[0]
+        for (let i = 1; i < packages.length; i++) {
+            const pkg = packages[i]
+
+            const highestPkgV = highestVersionPkg.metadataCCMod!.version!
+            const pkgV = pkg.metadataCCMod!.version!
+
+            if (gt(pkgV, highestPkgV)) highestVersionPkg = pkg
+        }
+        return highestVersionPkg
     }
 }
 

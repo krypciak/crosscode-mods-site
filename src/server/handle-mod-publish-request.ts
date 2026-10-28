@@ -38,6 +38,7 @@ export async function handleModPublishRequest(req: Request) {
 
         await ccmodModPublishCheck({
             ccmod,
+            branch,
             getUserInfo: () => getUserInfo(token, githubUserInfoCache),
             isUserAdmin: () => isUserAdmin(token, branch, githubRepoInfoCache),
         })
