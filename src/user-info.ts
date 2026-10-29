@@ -1,5 +1,4 @@
 import type { Endpoints } from '@octokit/types'
-import type { PkgCCMod } from 'ccmoddb/build/src/types'
 import { Branch } from './ccmoddb/branch'
 import type { KeyValueStore } from './cache'
 import { sha256 } from './sha'
@@ -69,22 +68,6 @@ export async function getRepoInfo(
     } catch (error) {
         console.error('fetching user info failed:', error)
     }
-}
-
-export function doesModOwnerMatch(ccmod: PkgCCMod, userInfo: GithubUserInfo): boolean {
-    const ccmodRepository = ccmod.repository ?? ''
-    return ccmodRepository.startsWith(userInfo.html_url)
-}
-
-export async function doesUserHavePermissionToPublishThisCCMod(
-    ccmod: PkgCCMod,
-    userInfo: GithubUserInfo,
-    isAdmin: boolean
-): Promise<boolean> {
-    const ownerMatch = doesModOwnerMatch(ccmod, userInfo)
-    if (ownerMatch) return true
-
-    return isAdmin
 }
 
 export async function getRepoInfoOfBranch(

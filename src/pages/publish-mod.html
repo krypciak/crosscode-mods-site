@@ -11,9 +11,10 @@
         <main id="app" class="editor-page">
             <!--shared-header-->
             <section id="main-content">
-                <h1 id="login-notice" hidden="true">You must login first to submit a mod</h1>
-                <div id="show-only-when-logged-in">
+                <div id="publish-page">
                     <div class="publish-layout">
+                        <h1 id="login-notice">You must login first to submit a mod</h1>
+
                         <form id="publish-form">
                             <div class="form-row grow">
                                 <label for="mod-url">mod url</label>
@@ -40,10 +41,7 @@
                             </div>
                         </form>
 
-                        <aside class="requests-sidebar">
-                            <h2 class="requests-title">Pending requests:</h2>
-                            <div class="placeholder-container" id="publish-requests"></div>
-                        </aside>
+                        <aside id="requests-container"></aside>
 
                         <div class="panels">
                             <section class="panel">

@@ -1,5 +1,5 @@
 import { getErrorMessage } from '../error-msg'
-import { modPublishRequests } from './mod-publish-requests'
+import { modPublishRequests } from './handle-mod-publish-request'
 
 export async function handleGetModPublishRequests(_req: Request) {
     try {

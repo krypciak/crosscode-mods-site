@@ -129,7 +129,7 @@ header {
     font-size: 14px;
 }
 
-#githubAvatar {
+.githubAvatar {
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -165,114 +165,6 @@ form {
     background: none;
     color: inherit;
     font: inherit;
-}
-
-/* publish-mod.html */
-#show-only-when-logged-in {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-
-    min-height: 0;
-    overflow-y: auto;
-}
-
-#publish-form {
-    grid-area: form;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-}
-
-/* form and preview on the left, sidebar capped at a quarter of the screen on the right */
-.publish-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 25%);
-    grid-template-rows: auto minmax(0, 1fr);
-    grid-template-areas:
-        'form sidebar'
-        'preview sidebar';
-    gap: 12px;
-    flex: 1 1 0;
-    /* never collapse below a usable size on short viewports; the console shrinks first */
-    min-height: 200px;
-    overflow-y: auto;
-}
-
-.publish-layout > .panels {
-    grid-area: preview;
-}
-
-.requests-sidebar {
-    grid-area: sidebar;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
-}
-
-.placeholder-container {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 8px;
-    min-height: 120px;
-    padding: 8px;
-    overflow-y: auto;
-    border: 1px dashed var(--border, currentColor);
-    border-radius: 3px;
-}
-
-.request-placeholder {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-height: 64px;
-    padding: 8px;
-    border: 1px solid var(--border, currentColor);
-    border-radius: 3px;
-}
-
-@media (max-width: 700px) {
-    .publish-layout {
-        flex: 1 0 auto;
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: none;
-        grid-template-areas:
-            'form'
-            'preview'
-            'sidebar';
-    }
-
-    /* the page scrolls here anyway, so don't squeeze the console to its minimum */
-    #app.editor-page #show-only-when-logged-in > .console-section {
-        flex-shrink: 0;
-    }
-
-    /* and let the requests list grow with the page instead of scrolling on its own */
-    #app.editor-page .placeholder-container {
-        overflow-y: visible;
-    }
-}
-
-.form-row.grow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.form-row.grow input {
-    flex: 1;
-    min-width: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    a,
-    button {
-        transition: none;
-    }
 }
 
 /* editor css */

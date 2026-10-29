@@ -2,6 +2,7 @@ import { githubClientId } from './config'
 import { takePkceVerifier, verifyOAuthState } from './auth-security'
 import { KeyValueStoreLocalStorage } from './cache'
 import { fetchProxiedAccessToken, type GithubTokenRequestSuccess } from './server-endpoints'
+import { githubRepoInfoCache, githubUserInfoCache } from './ui-common'
 
 type StoredAuthData = { acquiredAt: number } & GithubTokenRequestSuccess
 
@@ -82,12 +83,8 @@ export async function isLoggedIn() {
 }
 
 export function logoutGithub() {
-    for (const func of logoutListeners) func()
+    authStorage.clear()
+    githubUserInfoCache.clear()
+    githubRepoInfoCache.clear()
+    location.reload()
 }
-
-const logoutListeners: (() => void)[] = []
-export function addLogoutListener(func: () => void) {
-    logoutListeners.push(func)
-}
-
-addLogoutListener(() => authStorage.clear())

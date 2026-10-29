@@ -1,4 +1,4 @@
-import type { ModPublishRequestsRecord } from './server/mod-publish-requests'
+import type { ModPublishRequestsRecord } from './server/handle-mod-publish-request'
 
 export async function fetchUltimateCrosscodeTypedefsZip(): Promise<Uint8Array> {
     const resp = await fetch('/ultimate-crosscode-typedefs.zip')

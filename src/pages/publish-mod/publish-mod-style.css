@@ -1,0 +1,239 @@
+#publish-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    min-height: 0;
+    overflow-y: auto;
+}
+
+#login-notice {
+    grid-area: form;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+#publish-form {
+    grid-area: form;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+/* form and preview on the left, sidebar on the right (35% wide, capped at 1300px) */
+.publish-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, min(35%, 1300px));
+    /* the preview row can't shrink below the editor's min-height, so the layout never
+       becomes a scroll container - only the requests list scrolls */
+    grid-template-rows: auto minmax(min-content, 1fr);
+    grid-template-areas:
+        'form sidebar'
+        'preview sidebar';
+    gap: 12px;
+    flex: 1 1 0;
+    /* don't collapse below the form + editor on short viewports; the page scrolls then */
+    min-height: min-content;
+}
+
+.publish-layout > .panels {
+    grid-area: preview;
+}
+
+/* publish form visibility toggle */
+.publish-layout:not(.logged-out) > #login-notice,
+.publish-layout.logged-out > :is(#publish-form, .panels) {
+    visibility: hidden;
+}
+
+#requests-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
+    min-height: 0;
+
+    flex: 1;
+    overflow-y: auto;
+
+    grid-area: sidebar;
+    /* the request list must not contribute to the layout's intrinsic height -
+       it scrolls inside the sidebar instead of making the layout scroll */
+    contain: size;
+
+    border: 1px dashed var(--border, currentColor);
+    border-radius: 3px;
+    gap: 8px;
+    padding: 8px;
+}
+
+.requests-message {
+    margin: auto;
+    padding: 4px;
+    font-size: 12px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.requests-title {
+    flex: 0 0 auto;
+    margin: 0 0 2px;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.request-card {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 64px;
+    padding: 8px;
+    border: 1px solid var(--border, currentColor);
+    border-radius: 3px;
+    overflow-wrap: anywhere;
+}
+
+.request-card-meta {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.request-card-version {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.request-card-version-arrow {
+    color: #61afef;
+    font-weight: 700;
+}
+
+.request-card-version-new {
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 700;
+    color: #e06c75;
+}
+
+/* the global link padding is too much inside a card */
+.request-card-url {
+    padding: 0;
+    font-size: 12px;
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.request-card-link-row {
+    display: flex;
+    gap: 3px;
+    min-width: 0;
+    font-size: 12px;
+}
+
+.request-card-link-label {
+    flex: 0 0 auto;
+}
+
+.request-card-link-row > .request-card-url {
+    min-width: 0;
+}
+
+.request-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.request-card-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+    color: inherit;
+    background: none;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.request-card-action svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.request-card-action:hover:not(:disabled) {
+    background: rgba(127, 127, 127, 0.25);
+}
+
+.request-card-action:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.request-card-accept {
+    color: #98c379;
+}
+
+.request-card-reject {
+    color: #e06c75;
+}
+
+@media (max-width: 700px) {
+    .publish-layout {
+        flex: 1 0 auto;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        grid-template-areas:
+            'form'
+            'preview'
+            'sidebar';
+    }
+
+    /* the page scrolls here, so fully collapse the hidden form/preview instead of reserving space */
+    .publish-layout.logged-out > #publish-form,
+    .publish-layout.logged-out > .panels {
+        display: none;
+    }
+
+    /* the page scrolls here anyway, so don't squeeze the console to its minimum */
+    #app.editor-page #publish-page > .console-section {
+        flex-shrink: 0;
+    }
+
+    /* and let the requests list grow with the page instead of scrolling on its own */
+    #app.editor-page .requets-container {
+        overflow-y: visible;
+    }
+
+    #requests-container {
+        contain: none;
+    }
+}
+
+.form-row.grow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-row.grow input {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    a,
+    button {
+        transition: none;
+    }
+}

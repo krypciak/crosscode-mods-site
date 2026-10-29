@@ -1,5 +1,5 @@
 import { githubClientId } from './config'
-import { addLogoutListener, getGithubToken, isLoggedIn, logoutGithub } from './auth'
+import { getGithubToken, isLoggedIn, logoutGithub } from './auth'
 import { setOAuthState, setPkceChallenge } from './auth-security'
 import { getUserInfo, type GithubUserInfo } from './user-info'
 import { githubUserInfoCache } from './ui-common'
@@ -9,8 +9,6 @@ let defaultAvatarDataUri: string
 const githubLoginLogoutLink = document.getElementById('githubLoginLogoutLink') as HTMLLinkElement
 const githubUsername = document.getElementById('githubUsername') as HTMLSpanElement
 const githubAvatar = document.getElementById('githubAvatar') as HTMLImageElement
-
-addLogoutListener(() => void updateGithubUiElements())
 
 // pages are served with clean urls (`/check-mod` -> `check-mod.html`),
 // but `/check-mod.html` still works when hit directly
