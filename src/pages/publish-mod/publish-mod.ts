@@ -212,22 +212,22 @@ function createRequestCard(
     card.className = 'request-card'
 
     const title = document.createElement('strong')
+    title.className = 'request-card-title'
     title.textContent = getLocalizedString(request.ccmod.title) ?? request.ccmod.id
-    card.append(title)
 
-    card.append(createVersionInfo(request.ccmod.version!, request.oldVersion))
-
-
-    const avatar = createAutorGithubAvatar(request)
-    card.append(avatar)
+    const header = document.createElement('span')
+    header.className = 'request-card-header'
+    header.append(title, createVersionInfo(request.ccmod.version!, request.oldVersion))
+    card.append(header)
 
     const meta = document.createElement('span')
     meta.className = 'request-card-meta'
-    meta.textContent = [
-        request.branchName.split('/').pop(),
+    meta.append(
+        createAuthorGithubAvatar(request),
         'by ' + request.user,
-        formatRequestDate(request.submitDate),
-    ].join(' · ')
+        '· ' + request.branchName.split('/').pop(),
+        '· ' + formatRequestDate(request.submitDate)
+    )
     card.append(meta)
 
     const repo = request.ccmod.repository
@@ -294,9 +294,13 @@ function createActionButtons(
     return actions
 }
 
-function createAutorGithubAvatar(request: ModPublishRequest) {
+function createAuthorGithubAvatar(request: ModPublishRequest): HTMLImageElement {
     const img = document.createElement('img')
+    img.className = 'githubAvatar'
     img.src = request.userAvatarUrl
+    img.alt = request.user + ' avatar'
+    img.loading = 'lazy'
+    img.decoding = 'async'
     return img
 }
 
