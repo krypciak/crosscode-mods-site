@@ -23,6 +23,9 @@ export async function handleModPublishRequest(req: Request) {
         const token: string = body.token
         if (!token) throw new Error('missing "token" query parameter')
 
+        const modId: string = body.modId
+        if (!modId) throw new Error('missing "modId" query parameter')
+
         const modUrl: string = body.url
         if (!modUrl) throw new Error('missing "url" query parameter')
 
@@ -35,6 +38,8 @@ export async function handleModPublishRequest(req: Request) {
         const source: string = body.source
         if (source === undefined) throw new Error('missing "source" query parameter')
 
+        checkIfHasRequestPendingAlready(modId)
+
         const resp = await fetch(modUrl)
         const modArchive = await resp.bytes()
 
@@ -42,6 +47,8 @@ export async function handleModPublishRequest(req: Request) {
         const { text: ccmodText } = extractCCMod(modArchive, isCCMod)
 
         const { ccmod } = await ccmodCheck({ ccmodText, branch })
+
+        if (ccmod.id != modId) throw new Error('submitted mod archive has different mod id than the request one')
 
         const userInfo = await getUserInfo(token, githubUserInfoCache)
         if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
@@ -53,6 +60,7 @@ export async function handleModPublishRequest(req: Request) {
 
         await pushModPublishRequest({
             user: userInfo.login,
+            userAvatarUrl: userInfo.avatar_url,
             modUrl,
             ccmod,
             oldVersion: highestVersionPackage?.metadataCCMod!.version,
@@ -87,9 +95,13 @@ async function asyncSafeFileWrite(path: string, data: ArrayBufferLike | string):
     }
 }
 
+function checkIfHasRequestPendingAlready(modId: string) {
+    if (modPublishRequests[modId]) throw new Error(`mod has a publish request pending already!`)
+}
+
 async function pushModPublishRequest(request: ModPublishRequest) {
     const id = request.ccmod.id
-    if (modPublishRequests[id]) throw new Error(`mod has a publish request pending already!`)
+    checkIfHasRequestPendingAlready(id)
     modPublishRequests[id] = request
     await asyncSafeFileWrite(requestsFile, JSON.stringify(modPublishRequests, null, 4))
 }

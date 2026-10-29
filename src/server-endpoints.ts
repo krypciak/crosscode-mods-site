@@ -40,7 +40,7 @@ export async function githubAssetDownload(url: string): Promise<Uint8Array> {
     return new Uint8Array(buf)
 }
 
-export async function submitModPublishRequest(args: { token: string; url: string; branch: string; source: string }) {
+export async function submitModPublishRequest(args: { token: string; modId: string, url: string; branch: string; source: string }) {
     const resp = await fetch('/mod-publish-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

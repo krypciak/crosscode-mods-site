@@ -47,6 +47,9 @@ con.hookWindowConsole()
 
 fetchModPublishRequestsAndUpdateUi()
 
+let currentCCMod: PkgCCMod | undefined
+let requests: ModPublishRequest[] = []
+
 async function updateFormVisibility() {
     const loggedIn = await isLoggedIn()
     publishLayout.classList.toggle('logged-out', !loggedIn)
@@ -94,6 +97,11 @@ async function check(): Promise<boolean> {
         return false
     }
 
+    if (requests.find(request => request.ccmod.id == ccmod.id)) {
+        con.append('[error]', 'a request with the same mod id is already pending!')
+        return false
+    }
+
     const token = await getGithubToken()
     if (!token) return false
 
@@ -110,6 +118,7 @@ async function check(): Promise<boolean> {
 
     con.append('[info]', PASS_SYM, 'all checks passed!')
 
+    currentCCMod = ccmod
     return true
 }
 
@@ -125,7 +134,8 @@ async function publish(): Promise<void> {
     const source = sourceInput.value?.trim() ?? ''
 
     try {
-        await submitModPublishRequest({ token, url: modUrl, branch: branch.getName(), source })
+        if (!currentCCMod) throw new Error('currentCCMod undefined somehow?')
+        await submitModPublishRequest({ token, modId: currentCCMod.id, url: modUrl, branch: branch.getName(), source })
     } catch (e) {
         con.append('[error]', getErrorMessage(e))
         return
@@ -163,7 +173,6 @@ async function fetchModPublishRequestsAndUpdateUi() {
         return message
     }
 
-    let requests: ModPublishRequest[]
     try {
         const requestsRecord = await fetchModPublishRequests()
         requests = Object.values(requestsRecord).sort((a, b) => b.submitDate - a.submitDate)
@@ -207,6 +216,10 @@ function createRequestCard(
     card.append(title)
 
     card.append(createVersionInfo(request.ccmod.version!, request.oldVersion))
+
+
+    const avatar = createAutorGithubAvatar(request)
+    card.append(avatar)
 
     const meta = document.createElement('span')
     meta.className = 'request-card-meta'
@@ -279,6 +292,12 @@ function createActionButtons(
     createActionButton('reject', REJECT_ICON, () => onModPublishRequestReject(request))
 
     return actions
+}
+
+function createAutorGithubAvatar(request: ModPublishRequest) {
+    const img = document.createElement('img')
+    img.src = request.userAvatarUrl
+    return img
 }
 
 function createLabeledLink(label: string, url: string): HTMLElement {
