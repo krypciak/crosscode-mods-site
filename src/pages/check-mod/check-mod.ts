@@ -1,6 +1,6 @@
 import '../../main'
 import { dbSelect, Editor, Console, fillDbSelectWithOptions, getCurrentlySelectedBranch } from '../../ui-common'
-import { extractCCMod } from '../../ccmoddb/zip'
+import { getCCModJsonFileFromUnzippedModArchive, unzipModArchive } from '../../ccmoddb/zip'
 import { FAIL_SYM, PASS_SYM } from '../../colors-and-symbols'
 import { ccmodCheck } from '../../ccmoddb/ccmod-check'
 import { getErrorMessage } from '../../error-msg'
@@ -46,9 +46,10 @@ fileInput.addEventListener('change', async () => {
         const isCCMod = file.name.endsWith('.ccmod')
 
         try {
-            const ccmod = extractCCMod(modArchive, isCCMod)
-            inputEditor.setText(ccmod.text)
-            con.append('[info]', `loaded ${file.name} (${file.size} bytes): ${ccmod.path}`)
+            const unzipped = await unzipModArchive(modArchive)
+            const ccmodText = getCCModJsonFileFromUnzippedModArchive(unzipped, isCCMod)
+            inputEditor.setText(ccmodText)
+            con.append('[info]', `loaded ${file.name} (${file.size} bytes)`)
         } catch (e) {
             const errorMsg = getErrorMessage(e)
             con.append('[error]', `${FAIL_SYM} ${errorMsg} in ${file.name}`)

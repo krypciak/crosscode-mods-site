@@ -10,7 +10,11 @@ import {
     githubRepoInfoCache,
     githubUserInfoCache,
 } from '../../ui-common'
-import { extractCCMod, type ExtractedCcmod } from '../../ccmoddb/zip'
+import {
+    getCCModJsonFileFromUnzippedModArchive,
+    getModIconUrlFromUnzippedModArchive,
+    unzipModArchive,
+} from '../../ccmoddb/zip'
 import type { LocalizedString, PkgCCMod } from 'ccmoddb/build/src/types'
 import { getUserInfo, isUserAdmin } from '../../user-info'
 import { getErrorMessage } from '../../error-msg'
@@ -20,6 +24,7 @@ import { ccmodModPublishCheck, getPermissionsToActOnModPublishRequest } from '..
 import { fetchModPublishRequests, githubAssetDownload, submitModPublishRequest } from '../../server-endpoints'
 import type { ModPublishRequest, ModPublishRequestActPermissions } from '../../ccmoddb/mod-publish-request'
 import { branches } from '../../ccmoddb/branch'
+import type { Unzipped } from 'fflate'
 
 const form = document.getElementById('publish-form') as HTMLFormElement
 const publishLayout = document.querySelector<HTMLDivElement>('.publish-layout')!
@@ -73,21 +78,23 @@ async function check(): Promise<boolean> {
     con.append('[info]', 'downloaded')
 
     const isCCMod = modUrl.endsWith('.ccmod')
-    let result: ExtractedCcmod
+    let unzipped: Unzipped
+    let ccmodText: string
     try {
-        result = extractCCMod(modArchive, isCCMod, source)
+        unzipped = await unzipModArchive(modArchive)
+        ccmodText = getCCModJsonFileFromUnzippedModArchive(unzipped, isCCMod, source)
     } catch (e) {
         con.append('[error]', getErrorMessage(e))
         return false
     }
 
-    ccmodPreviewEditor.setText(result.text)
+    ccmodPreviewEditor.setText(ccmodText)
 
     const branch = getCurrentlySelectedBranch()
     let ccmod: PkgCCMod
     try {
         const res = await ccmodCheck({
-            ccmodText: result.text,
+            ccmodText,
             branch,
             log: text => con.append('[info]', text),
         })

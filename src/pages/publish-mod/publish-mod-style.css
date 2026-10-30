@@ -40,6 +40,9 @@
 
 .publish-layout > .panels {
     grid-area: preview;
+    /* the preview editor must not contribute to the layout's intrinsic height -
+       overflowing text scrolls inside the editor instead of growing it */
+    contain: size;
 }
 
 /* publish form visibility toggle */

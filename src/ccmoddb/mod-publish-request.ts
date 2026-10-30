@@ -6,6 +6,7 @@ import { gt } from 'semver'
 export interface ModPublishRequest {
     user: string
     userAvatarUrl: string
+    modIconUrl?: string
 
     ccmod: PkgCCMod
     oldVersion?: string

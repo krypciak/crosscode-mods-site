@@ -2,7 +2,11 @@ import { KeyValueStoreInMemory } from '../cache'
 import { branches } from '../ccmoddb/branch'
 import { ccmodCheck } from '../ccmoddb/ccmod-check'
 import { ccmodModPublishCheck } from '../ccmoddb/mod-publish-request'
-import { extractCCMod } from '../ccmoddb/zip'
+import {
+    getCCModJsonFileFromUnzippedModArchive,
+    getModIconUrlFromUnzippedModArchive,
+    unzipModArchive,
+} from '../ccmoddb/zip'
 import { getErrorMessage } from '../error-msg'
 import { sha256 } from '../sha'
 import { type GithubUserInfo, type GithubRepoInfo, getUserInfo, isUserAdmin } from '../user-info'
@@ -16,27 +20,33 @@ const requestsFile = './mod-publish-requests.json'
 export type ModPublishRequestsRecord = Record<string, ModPublishRequest>
 export const modPublishRequests: ModPublishRequestsRecord = await readRequestsFromDisk()
 
+async function getArgs(req: Request) {
+    const body = await req.json()
+
+    const token: string = body.token
+    if (!token) throw new Error('missing "token" query parameter')
+
+    const modId: string = body.modId
+    if (!modId) throw new Error('missing "modId" query parameter')
+
+    const modUrl: string = body.url
+    if (!modUrl) throw new Error('missing "url" query parameter')
+
+    const branchName: string = body.branch
+    if (!branchName) throw new Error('missing "branch" query parameter')
+
+    const source: string = body.source
+    if (source === undefined) throw new Error('missing "source" query parameter')
+
+    return { token, modId, modUrl, branchName, source }
+}
+
 export async function handleModPublishRequest(req: Request) {
     try {
-        const body = await req.json()
-
-        const token: string = body.token
-        if (!token) throw new Error('missing "token" query parameter')
-
-        const modId: string = body.modId
-        if (!modId) throw new Error('missing "modId" query parameter')
-
-        const modUrl: string = body.url
-        if (!modUrl) throw new Error('missing "url" query parameter')
-
-        const branchName: string = body.branch
-        if (!branchName) throw new Error('missing "branch" query parameter')
+        const { token, modId, modUrl, branchName, source } = await getArgs(req)
 
         const branch = branches[branchName]
         if (!branch) throw new Error('unknown branch')
-
-        const source: string = body.source
-        if (source === undefined) throw new Error('missing "source" query parameter')
 
         checkIfHasRequestPendingAlready(modId)
 
@@ -44,7 +54,8 @@ export async function handleModPublishRequest(req: Request) {
         const modArchive = await resp.bytes()
 
         const isCCMod = modUrl.endsWith('.ccmod')
-        const { text: ccmodText } = extractCCMod(modArchive, isCCMod)
+        const unzipped = await unzipModArchive(modArchive)
+        const ccmodText = getCCModJsonFileFromUnzippedModArchive(unzipped, isCCMod)
 
         const { ccmod } = await ccmodCheck({ ccmodText, branch })
 
@@ -58,9 +69,12 @@ export async function handleModPublishRequest(req: Request) {
 
         const modArchiveHash = await sha256(modArchive)
 
+        const modIconUrl = getModIconUrlFromUnzippedModArchive(unzipped, ccmod)
+
         await pushModPublishRequest({
             user: userInfo.login,
             userAvatarUrl: userInfo.avatar_url,
+            modIconUrl,
             modUrl,
             ccmod,
             oldVersion: highestVersionPackage?.metadataCCMod!.version,
