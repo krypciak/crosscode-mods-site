@@ -246,13 +246,18 @@
 
 @media (max-width: 900px) {
     .publish-layout {
-        flex: 1 0 auto;
+        /* the page scrolls here, so size the layout to its content instead of
+           stretching the auto rows to fill the viewport */
+        flex: 0 0 auto;
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: none;
         grid-template-areas:
             'form'
             'preview'
             'sidebar';
+        /* all rows are auto-sized here, so without this the leftover height gets
+           distributed between them and leaves a large gap above the preview/requests */
+        align-content: start;
     }
 
     /* the page scrolls here, so fully collapse the hidden form/preview instead of reserving space */
