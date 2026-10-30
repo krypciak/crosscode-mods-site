@@ -218,6 +218,9 @@ function createRequestCard(
     const card = document.createElement('div')
     card.className = 'request-card'
 
+    const content = document.createElement('div')
+    content.className = 'request-card-content'
+
     const title = document.createElement('strong')
     title.className = 'request-card-title'
     title.textContent = getLocalizedString(request.ccmod.title) ?? request.ccmod.id
@@ -225,17 +228,26 @@ function createRequestCard(
     const header = document.createElement('span')
     header.className = 'request-card-header'
     header.append(title, createVersionInfo(request.ccmod.version!, request.oldVersion))
-    card.append(header)
+    content.append(header)
 
     const meta = document.createElement('span')
     meta.className = 'request-card-meta'
     meta.append(
-        createAuthorGithubAvatar(request),
         'by ' + request.user,
-        '· ' + request.branchName.split('/').pop(),
-        '· ' + formatRequestDate(request.submitDate)
+        ' · ' + request.branchName.split('/').pop(),
+        ' · ' + formatRequestDate(request.submitDate)
     )
-    card.append(meta)
+    content.append(meta)
+
+    const icons = document.createElement('div')
+    icons.className = 'request-card-icons'
+    icons.append(createModIcon(request), createAuthorGithubAvatar(request))
+
+    const top = document.createElement('div')
+    top.className = 'request-card-top'
+    top.append(icons, content)
+
+    card.append(top)
 
     const repo = request.ccmod.repository
     if (repo) card.append(createLabeledLink('repo', repo))
@@ -245,6 +257,24 @@ function createRequestCard(
     card.append(createActionButtons(request, branchPermissionsPromise))
 
     return card
+}
+
+const DEFAULT_MOD_ICON_URL = '/default-mod-icon.png'
+
+function createModIcon(request: ModPublishRequest): HTMLImageElement {
+    const img = document.createElement('img')
+    img.className = 'request-card-icon'
+    img.src = request.modIconUrl || DEFAULT_MOD_ICON_URL
+    img.alt = (getLocalizedString(request.ccmod.title) ?? request.ccmod.id) + ' icon'
+    img.loading = 'lazy'
+    img.decoding = 'async'
+
+    img.onerror = () => {
+        img.onerror = null
+        img.src = DEFAULT_MOD_ICON_URL
+    }
+
+    return img
 }
 
 function createVersionInfo(newVersion: string, oldVersion: string | undefined): HTMLElement {
