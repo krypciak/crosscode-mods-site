@@ -4,7 +4,8 @@ import type { Branch } from './branch'
 import { gt } from 'semver'
 
 export interface ModPublishRequest {
-    user: string
+    userLogin: string
+    userName: string
     userAvatarUrl: string
     modIconUrl?: string
 
@@ -77,6 +78,10 @@ export function getPermissionsToActOnModPublishRequest({
 }): ModPublishRequestActPermissions {
     return {
         accept: isAdmin,
-        reject: isAdmin || (!!userInfo && request.user == userInfo.login),
+        reject: isAdmin || (!!userInfo && request.userLogin == userInfo.login),
     }
+}
+
+export function hasRequestPendingAlready(requests: ModPublishRequest[], branchName: string, modId: string): boolean {
+    return !!requests.find(request => request.branchName == branchName && request.ccmod.id == modId)
 }

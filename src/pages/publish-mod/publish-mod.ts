@@ -16,7 +16,11 @@ import { getUserInfo, isUserAdmin } from '../../user-info'
 import { getErrorMessage } from '../../error-msg'
 import { ccmodCheck } from '../../ccmoddb/ccmod-check'
 import { PASS_SYM } from '../../colors-and-symbols'
-import { ccmodModPublishCheck, getPermissionsToActOnModPublishRequest } from '../../ccmoddb/mod-publish-request'
+import {
+    ccmodModPublishCheck,
+    getPermissionsToActOnModPublishRequest,
+    hasRequestPendingAlready,
+} from '../../ccmoddb/mod-publish-request'
 import { fetchModPublishRequests, githubAssetDownload, submitModPublishRequest } from '../../server-endpoints'
 import type { ModPublishRequest, ModPublishRequestActPermissions } from '../../ccmoddb/mod-publish-request'
 import { branches } from '../../ccmoddb/branch'
@@ -59,7 +63,7 @@ async function updateFormVisibility() {
 async function check(): Promise<boolean> {
     const modUrl = urlInput.value.trim()
     if (!modUrl) return false
-    const source = sourceInput.value?.trim() ?? ''
+    let source = sourceInput.value?.trim() ?? ''
 
     con.clear()
     con.append('[info]', 'downloading', `"${modUrl}"`)
@@ -78,11 +82,13 @@ async function check(): Promise<boolean> {
     let ccmodText: string
     try {
         unzipped = await unzipModArchive(modArchive)
-        ccmodText = getCCModJsonFileFromUnzippedModArchive(unzipped, isCCMod, source)
+        ;({ ccmodText, source } = getCCModJsonFileFromUnzippedModArchive(unzipped, isCCMod, source))
     } catch (e) {
         con.append('[error]', getErrorMessage(e))
         return false
     }
+
+    sourceInput.value = source
 
     ccmodPreviewEditor.setText(ccmodText)
 
@@ -96,11 +102,11 @@ async function check(): Promise<boolean> {
         })
         ccmod = res.ccmod
     } catch (e) {
-        con.append('[error]', 'error while checking ccmod', e)
+        con.append('[error]', 'error while checking ccmod', getErrorMessage(e))
         return false
     }
 
-    if (requests.find(request => request.ccmod.id == ccmod.id)) {
+    if (hasRequestPendingAlready(requests, branch.getName(), ccmod.id)) {
         con.append('[error]', 'a request with the same mod id is already pending!')
         return false
     }
@@ -131,7 +137,9 @@ async function publish(): Promise<void> {
     const token = await getGithubToken()
     if (!token) return
 
-    con.append('[info]', 'publish')
+    publishButton.disabled = true
+
+    con.append('[info]', 'sending publish request...')
 
     const branch = getCurrentlySelectedBranch()
     const source = sourceInput.value?.trim() ?? ''
@@ -144,7 +152,7 @@ async function publish(): Promise<void> {
         return
     }
 
-    con.append('[info]', `submitted!`)
+    con.append('[info]', `submitted succesfully!`)
 
     await fetchModPublishRequestsAndUpdateUi()
 }
@@ -177,8 +185,8 @@ async function fetchModPublishRequestsAndUpdateUi() {
     }
 
     try {
-        const requestsRecord = await fetchModPublishRequests()
-        requests = Object.values(requestsRecord).sort((a, b) => b.submitDate - a.submitDate)
+        requests = await fetchModPublishRequests()
+        requests.sort((a, b) => b.submitDate - a.submitDate)
     } catch (e) {
         con.append('[error]', 'failed to fetch mod publish requests', getErrorMessage(e))
         requestsContainer.replaceChildren(createRequestsMessage('failed to load publish requests'))
@@ -229,7 +237,7 @@ function createRequestCard(
     const meta = document.createElement('span')
     meta.className = 'request-card-meta'
     meta.append(
-        'by ' + request.user,
+        'submitted by ' + request.userName,
         ' · ' + request.branchName.split('/').pop(),
         ' · ' + formatRequestDate(request.submitDate)
     )
@@ -256,9 +264,11 @@ function createRequestCard(
 }
 
 function createModIcon(request: ModPublishRequest): HTMLImageElement {
+    const DEFAULT_MOD_ICON_URL = '/default-mod-icon.png'
+
     const img = document.createElement('img')
     img.className = 'request-card-icon'
-    img.src = request.modIconUrl || '/default-mod-icon.png'
+    img.src = request.modIconUrl || DEFAULT_MOD_ICON_URL
     img.alt = (getLocalizedString(request.ccmod.title) ?? request.ccmod.id) + ' icon'
     img.loading = 'lazy'
     img.decoding = 'async'
@@ -327,7 +337,7 @@ function createAuthorGithubAvatar(request: ModPublishRequest): HTMLImageElement 
     const img = document.createElement('img')
     img.className = 'githubAvatar'
     img.src = request.userAvatarUrl
-    img.alt = request.user + ' avatar'
+    img.alt = request.userName + ' avatar'
     img.loading = 'lazy'
     img.decoding = 'async'
     return img

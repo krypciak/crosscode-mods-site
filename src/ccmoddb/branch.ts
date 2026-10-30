@@ -70,7 +70,13 @@ const testing = new Branch({
     branch: 'testing',
     parent: stable,
 })
+const multi = new Branch({
+    owner: 'krypciak',
+    repoName: 'CCModDB',
+    branch: 'multi',
+    parent: stable
+})
 
 export const branches: Record<string, Branch> = Object.fromEntries(
-    [stable, testing].map(branch => [branch.getName(), branch])
+    [stable, testing, multi].map(branch => [branch.getName(), branch])
 )

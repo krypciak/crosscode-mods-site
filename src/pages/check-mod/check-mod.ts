@@ -47,7 +47,7 @@ fileInput.addEventListener('change', async () => {
 
         try {
             const unzipped = await unzipModArchive(modArchive)
-            const ccmodText = getCCModJsonFileFromUnzippedModArchive(unzipped, isCCMod)
+            const { ccmodText } = getCCModJsonFileFromUnzippedModArchive(unzipped, isCCMod)
             inputEditor.setText(ccmodText)
             con.append('[info]', `loaded ${file.name} (${file.size} bytes)`)
         } catch (e) {

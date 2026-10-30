@@ -1,4 +1,4 @@
-import type { ModPublishRequestsRecord } from './server/handle-mod-publish-request'
+import type { ModPublishRequest } from './ccmoddb/mod-publish-request'
 
 export async function fetchUltimateCrosscodeTypedefsZip(): Promise<Uint8Array> {
     const resp = await fetch('/ultimate-crosscode-typedefs.zip')
@@ -60,12 +60,12 @@ export async function submitModPublishRequest(args: {
     }
 }
 
-export async function fetchModPublishRequests(): Promise<ModPublishRequestsRecord> {
+export async function fetchModPublishRequests(): Promise<ModPublishRequest[]> {
     const resp = await fetch('/get-mod-publish-requests', {
         method: 'GET',
     })
     if (!resp.ok) throw new Error(`Download failed: ${resp.status} ${resp.statusText}`)
 
-    const json: ModPublishRequestsRecord = await resp.json()
+    const json: ModPublishRequest[] = await resp.json()
     return json
 }
