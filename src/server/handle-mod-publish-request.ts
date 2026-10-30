@@ -39,6 +39,8 @@ for (const branchName in branches) {
     if (!branchTokens[branchName]) console.warn('warn: branch', branchName, 'has no github token configured')
 }
 
+let actionRequestQueue: Promise<void> = Promise.resolve()
+
 export async function handleGetModPublishRequests(_req: Request) {
     try {
         return Response.json(modPublishRequests.requests)
@@ -159,56 +161,64 @@ function removeModPublishRequest(request: ModPublishRequest) {
     delete modPublishRequests.requests[request.requestId]
 }
 
+function actionRequestEnqueue<T>(task: () => Promise<T>): Promise<T> {
+    const run = actionRequestQueue.then(task)
+    actionRequestQueue = run.then(
+        () => {},
+        () => {}
+    )
+    return run
+}
+
 export async function handleModPublishRequestAction(req: Request) {
-    try {
-        const body = await req.json()
+    return actionRequestEnqueue(async () => {
+        try {
+            const body = await req.json()
 
-        const token: string = body.token
-        if (!token) throw new Error('missing "token" query parameter')
+            const token: string = body.token
+            if (!token) throw new Error('missing "token" query parameter')
 
-        const requestId: number = body.requestId
-        if (requestId === undefined) throw new Error('missing "requestId" query parameter')
+            const requestId: number = body.requestId
+            if (requestId === undefined) throw new Error('missing "requestId" query parameter')
 
-        const request = modPublishRequests.requests[requestId]
-        if (!request) throw new Error('request with the specified id not found')
+            const request = modPublishRequests.requests[requestId]
+            if (!request) throw new Error('request with the specified id not found')
 
-        const actionType: ModPublishRequestActionType = body.actionType
-        if (!actionType) throw new Error('missing "actionType" query parameter')
-        if (actionType != 'accept' && actionType != 'reject') throw new Error('invalid "actionType" value')
+            const actionType: ModPublishRequestActionType = body.actionType
+            if (!actionType) throw new Error('missing "actionType" query parameter')
+            if (actionType != 'accept' && actionType != 'reject') throw new Error('invalid "actionType" value')
 
-        const branch = branches[request.branchName]
+            const branch = branches[request.branchName]
 
-        const userInfo = await getUserInfo(token, githubUserInfoCache)
-        if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
+            const userInfo = await getUserInfo(token, githubUserInfoCache)
+            if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
 
-        const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
+            const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
 
-        const userPermissions = getPermissionsToActOnModPublishRequest({ request, userInfo, isAdmin })
-        if (!userPermissions[actionType]) throw new Error('user has no permission to perform this action')
+            const userPermissions = getPermissionsToActOnModPublishRequest({ request, userInfo, isAdmin })
+            if (!userPermissions[actionType]) throw new Error('user has no permission to perform this action')
 
-        if (actionType == 'accept') {
-            console.log(request.modUrl)
-            const resp = await fetch(request.modUrl)
-            const modArchive = await resp.bytes()
+            if (actionType == 'accept') {
+                const resp = await fetch(request.modUrl)
+                const modArchive = await resp.bytes()
 
-            const modArchiveHash = await sha256(modArchive)
+                const modArchiveHash = await sha256(modArchive)
 
-            if (modArchiveHash != request.modArchiveHash) {
-                throw new Error(
-                    'mod archive hash mismatch! did you change the mod archive after submitting the publish request?'
-                )
+                if (modArchiveHash != request.modArchiveHash) {
+                    throw new Error(
+                        'mod archive hash mismatch! did you change the mod archive after submitting the publish request?'
+                    )
+                }
             }
 
-            console.log('send commit', request)
+            removeModPublishRequest(request)
+            await saveModPublishRequestsToFile()
+
+            return Response.json(modPublishRequests.requests)
+        } catch (e) {
+            console.error(e)
+            const message = getErrorMessage(e)
+            return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
         }
-
-        removeModPublishRequest(request)
-        await saveModPublishRequestsToFile()
-
-        return Response.json(modPublishRequests.requests)
-    } catch (e) {
-        console.error(e)
-        const message = getErrorMessage(e)
-        return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
-    }
+    })
 }
