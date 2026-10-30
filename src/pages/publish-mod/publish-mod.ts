@@ -10,11 +10,7 @@ import {
     githubRepoInfoCache,
     githubUserInfoCache,
 } from '../../ui-common'
-import {
-    getCCModJsonFileFromUnzippedModArchive,
-    getModIconUrlFromUnzippedModArchive,
-    unzipModArchive,
-} from '../../ccmoddb/zip'
+import { getCCModJsonFileFromUnzippedModArchive, unzipModArchive } from '../../ccmoddb/zip'
 import type { LocalizedString, PkgCCMod } from 'ccmoddb/build/src/types'
 import { getUserInfo, isUserAdmin } from '../../user-info'
 import { getErrorMessage } from '../../error-msg'
@@ -259,12 +255,10 @@ function createRequestCard(
     return card
 }
 
-const DEFAULT_MOD_ICON_URL = '/default-mod-icon.png'
-
 function createModIcon(request: ModPublishRequest): HTMLImageElement {
     const img = document.createElement('img')
     img.className = 'request-card-icon'
-    img.src = request.modIconUrl || DEFAULT_MOD_ICON_URL
+    img.src = request.modIconUrl || '/default-mod-icon.png'
     img.alt = (getLocalizedString(request.ccmod.title) ?? request.ccmod.id) + ' icon'
     img.loading = 'lazy'
     img.decoding = 'async'
@@ -299,8 +293,6 @@ function createVersionInfo(newVersion: string, oldVersion: string | undefined): 
     return version
 }
 
-const ACCEPT_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>`
-const REJECT_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>`
 function createActionButtons(
     request: ModPublishRequest,
     branchPermissionsPromise: Promise<ModPublishRequestActPermissions>
@@ -308,13 +300,13 @@ function createActionButtons(
     const actions = document.createElement('div')
     actions.className = 'request-card-actions'
 
-    function createActionButton(type: 'accept' | 'reject', icon: string, onclick: () => unknown) {
+    function createActionButton(type: 'accept' | 'reject', iconUrl: string, onclick: () => unknown) {
         const button = document.createElement('button')
         button.type = 'button'
         button.className = 'request-card-action ' + 'request-card-' + type
         button.title = type
         button.setAttribute('aria-label', type)
-        button.innerHTML = icon
+        button.innerHTML = `<svg class="request-card-action-icon" aria-hidden="true"><use href="${iconUrl}"></use></svg>`
         button.dataset.modId = request.ccmod.id
 
         button.onclick = onclick
@@ -325,8 +317,8 @@ function createActionButtons(
         actions.append(button)
     }
 
-    createActionButton('accept', ACCEPT_ICON, () => onModPublishRequestAccept(request))
-    createActionButton('reject', REJECT_ICON, () => onModPublishRequestReject(request))
+    createActionButton('accept', '/accept-icon.svg#icon', () => onModPublishRequestAccept(request))
+    createActionButton('reject', '/reject-icon.svg#icon', () => onModPublishRequestReject(request))
 
     return actions
 }
