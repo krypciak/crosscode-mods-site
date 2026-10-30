@@ -1,9 +1,9 @@
-const githubClientSecret = process.env.GITHUB_CLIENT_SECRET
-if (!githubClientSecret) throw new Error('GITHUB_CLIENT_SECRET environment variable not set!')
+import secrets from '../../secrets.json'
+if (!secrets.githubClientSecret) throw new Error('GITHUB_CLIENT_SECRET environment variable not set!')
 
 export async function handleAccessToken(req: Request) {
     const originalBody = await req.text()
-    const suffix = `client_secret=${encodeURIComponent(githubClientSecret!)}`
+    const suffix = `client_secret=${encodeURIComponent(secrets.githubClientSecret)}`
     const newBody = originalBody ? `${originalBody}&${suffix}` : suffix
 
     const upstream = await fetch('https://github.com/login/oauth/access_token', {

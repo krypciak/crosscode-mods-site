@@ -21,8 +21,18 @@ import {
     getPermissionsToActOnModPublishRequest,
     hasRequestPendingAlready,
 } from '../../ccmoddb/mod-publish-request'
-import { fetchModPublishRequests, githubAssetDownload, submitModPublishRequest } from '../../server-endpoints'
-import type { ModPublishRequest, ModPublishRequestActPermissions } from '../../ccmoddb/mod-publish-request'
+import {
+    fetchModPublishRequests,
+    githubAssetDownload,
+    sendModPublishRequestAction,
+    submitModPublishRequest,
+} from '../../server-endpoints'
+import type {
+    ModPublishRequest,
+    ModPublishRequestActionType,
+    ModPublishRequestActPermissions,
+    ModPublishRequestsRecord,
+} from '../../ccmoddb/mod-publish-request'
 import { branches } from '../../ccmoddb/branch'
 import type { Unzipped } from 'fflate'
 
@@ -53,7 +63,7 @@ con.hookWindowConsole()
 fetchModPublishRequestsAndUpdateUi()
 
 let currentCCMod: PkgCCMod | undefined
-let requests: ModPublishRequest[] = []
+let requests: ModPublishRequestsRecord = {}
 
 async function updateFormVisibility() {
     const loggedIn = await isLoggedIn()
@@ -148,7 +158,7 @@ async function publish(): Promise<void> {
         if (!currentCCMod) throw new Error('currentCCMod undefined somehow?')
         await submitModPublishRequest({ token, modId: currentCCMod.id, url: modUrl, branch: branch.getName(), source })
     } catch (e) {
-        con.append('[error]', getErrorMessage(e))
+        con.append('[error]', 'server error:', getErrorMessage(e))
         return
     }
 
@@ -176,24 +186,29 @@ function hookButtons() {
 }
 
 /* requests sidebar */
-async function fetchModPublishRequestsAndUpdateUi() {
-    function createRequestsMessage(text: string): HTMLElement {
-        const message = document.createElement('span')
-        message.className = 'requests-message'
-        message.textContent = text
-        return message
-    }
+function createRequestsMessage(text: string): HTMLElement {
+    const message = document.createElement('span')
+    message.className = 'requests-message'
+    message.textContent = text
+    return message
+}
 
+async function fetchModPublishRequestsAndUpdateUi() {
     try {
         requests = await fetchModPublishRequests()
-        requests.sort((a, b) => b.submitDate - a.submitDate)
     } catch (e) {
         con.append('[error]', 'failed to fetch mod publish requests', getErrorMessage(e))
         requestsContainer.replaceChildren(createRequestsMessage('failed to load publish requests'))
         return
     }
+    updateRequetsUi()
+}
 
-    if (requests.length == 0) {
+function updateRequetsUi() {
+    const requestsArray = Object.values(requests)
+    requestsArray.sort((a, b) => b.submitDate - a.submitDate)
+
+    if (requestsArray.length == 0) {
         requestsContainer.replaceChildren(createRequestsMessage('no publish requests pending'))
         return
     }
@@ -212,7 +227,7 @@ async function fetchModPublishRequestsAndUpdateUi() {
         }))
     }
 
-    requestsContainer.replaceChildren(...requests.map(req => createRequestCard(req, getBranchPermissions(req))))
+    requestsContainer.replaceChildren(...requestsArray.map(req => createRequestCard(req, getBranchPermissions(req))))
 }
 
 function createRequestCard(
@@ -310,16 +325,16 @@ function createActionButtons(
     const actions = document.createElement('div')
     actions.className = 'request-card-actions'
 
-    function createActionButton(type: 'accept' | 'reject', iconUrl: string, onclick: () => unknown) {
+    function createActionButton(type: ModPublishRequestActionType) {
         const button = document.createElement('button')
         button.type = 'button'
         button.className = 'request-card-action ' + 'request-card-' + type
         button.title = type
         button.setAttribute('aria-label', type)
-        button.innerHTML = `<svg class="request-card-action-icon" aria-hidden="true"><use href="${iconUrl}"></use></svg>`
+        button.innerHTML = `<svg class="request-card-action-icon" aria-hidden="true"><use href="${type}-icon.svg#icon"></use></svg>`
         button.dataset.modId = request.ccmod.id
 
-        button.onclick = onclick
+        button.onclick = () => onModPublishRequestAction(request, type)
 
         button.disabled = true
         branchPermissionsPromise.then(perms => (button.disabled = !perms?.[type]))
@@ -327,8 +342,8 @@ function createActionButtons(
         actions.append(button)
     }
 
-    createActionButton('accept', '/accept-icon.svg#icon', () => onModPublishRequestAccept(request))
-    createActionButton('reject', '/reject-icon.svg#icon', () => onModPublishRequestReject(request))
+    createActionButton('accept')
+    createActionButton('reject')
 
     return actions
 }
@@ -381,10 +396,17 @@ function getLocalizedString(value: LocalizedString | undefined): string | undefi
     return value['en_US'] ?? Object.values(value)[0]
 }
 
-async function onModPublishRequestAccept(request: ModPublishRequest) {
-    console.log('accept', request)
-}
+async function onModPublishRequestAction(request: ModPublishRequest, actionType: ModPublishRequestActionType) {
+    const token = await getGithubToken()
+    if (!token) {
+        con.append('[error]', 'invalid token')
+        return
+    }
 
-async function onModPublishRequestReject(request: ModPublishRequest) {
-    console.log('reject', request)
+    try {
+        requests = await sendModPublishRequestAction({ requestId: request.requestId, token, actionType })
+    } catch (e) {
+        con.append('[error]', 'server error:', getErrorMessage(e))
+    }
+    updateRequetsUi()
 }

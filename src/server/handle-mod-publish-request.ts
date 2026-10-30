@@ -1,7 +1,11 @@
 import { KeyValueStoreInMemory } from '../cache'
 import { branches } from '../ccmoddb/branch'
 import { ccmodCheck } from '../ccmoddb/ccmod-check'
-import { ccmodModPublishCheck, hasRequestPendingAlready } from '../ccmoddb/mod-publish-request'
+import {
+    ccmodModPublishCheck,
+    getPermissionsToActOnModPublishRequest,
+    hasRequestPendingAlready,
+} from '../ccmoddb/mod-publish-request'
 import {
     getCCModJsonFileFromUnzippedModArchive,
     getModIconUrlFromUnzippedModArchive,
@@ -10,14 +14,39 @@ import {
 import { getErrorMessage } from '../error-msg'
 import { sha256 } from '../sha'
 import { type GithubUserInfo, type GithubRepoInfo, getUserInfo, isUserAdmin } from '../user-info'
-import type { ModPublishRequest } from '../ccmoddb/mod-publish-request'
+import type {
+    ModPublishRequest,
+    ModPublishRequestActionType,
+    ModPublishRequestsRecord,
+} from '../ccmoddb/mod-publish-request'
 import { readFile, rename, unlink } from 'node:fs/promises'
+
+import secrets from '../../secrets.json'
 
 const githubUserInfoCache = new KeyValueStoreInMemory<string, GithubUserInfo>(1000 * 60 * 60 * 8)
 const githubRepoInfoCache = new KeyValueStoreInMemory<string, GithubRepoInfo>(1000 * 60 * 60 * 8)
 
+interface ModPublishRequestsFile {
+    idCounter: number
+    requests: ModPublishRequestsRecord
+}
+
 const requestsFile = './mod-publish-requests.json'
-export const modPublishRequests: ModPublishRequest[] = await readRequestsFromDisk()
+const modPublishRequests: ModPublishRequestsFile = await readRequestsFromDisk()
+
+const branchTokens: Record<string, string> = secrets.githubBranchTokens
+for (const branchName in branches) {
+    if (!branchTokens[branchName]) console.warn('warn: branch', branchName, 'has no github token configured')
+}
+
+export async function handleGetModPublishRequests(_req: Request) {
+    try {
+        return Response.json(modPublishRequests.requests)
+    } catch (e) {
+        const message = getErrorMessage(e)
+        return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
+    }
+}
 
 export async function handleModPublishRequest(req: Request) {
     try {
@@ -65,7 +94,8 @@ export async function handleModPublishRequest(req: Request) {
 
         const modIconUrl = getModIconUrlFromUnzippedModArchive(unzipped, ccmod, source)
 
-        await pushModPublishRequest({
+        pushModPublishRequest({
+            requestId: modPublishRequests.idCounter++,
             userLogin: userInfo.login,
             userName: userInfo.name ?? userInfo.login,
             userAvatarUrl: userInfo.avatar_url,
@@ -78,6 +108,7 @@ export async function handleModPublishRequest(req: Request) {
             modArchiveHash,
             submitDate: Date.now(),
         })
+        void saveModPublishRequestsToFile()
 
         return new Response('success', { status: 200 })
     } catch (e) {
@@ -86,11 +117,13 @@ export async function handleModPublishRequest(req: Request) {
     }
 }
 
-async function readRequestsFromDisk() {
-    let requests: ModPublishRequest[] = []
+async function readRequestsFromDisk(): Promise<ModPublishRequestsFile> {
+    let requests: ModPublishRequestsFile = { idCounter: 0, requests: {} }
     try {
         requests = JSON.parse(await readFile(requestsFile, 'utf-8'))
-    } catch (e) {}
+    } catch (e) {
+        console.error(e)
+    }
     return requests
 }
 
@@ -105,14 +138,77 @@ async function asyncSafeFileWrite(path: string, data: ArrayBufferLike | string):
 }
 
 function checkIfHasRequestPendingAlready(branchName: string, modId: string) {
-    if (hasRequestPendingAlready(modPublishRequests, branchName, modId))
+    if (hasRequestPendingAlready(modPublishRequests.requests, branchName, modId))
         throw new Error(`mod has a publish request pending already!`)
 }
 
-async function pushModPublishRequest(request: ModPublishRequest) {
+async function saveModPublishRequestsToFile() {
+    await asyncSafeFileWrite(requestsFile, JSON.stringify(modPublishRequests, null, 4))
+}
+
+function pushModPublishRequest(request: ModPublishRequest) {
     const id = request.ccmod.id
     const branchName = request.branchName
     checkIfHasRequestPendingAlready(branchName, id)
-    modPublishRequests.push(request)
-    await asyncSafeFileWrite(requestsFile, JSON.stringify(modPublishRequests, null, 4))
+    if (modPublishRequests.requests[request.requestId])
+        throw new Error(`request with id ${request.requestId} already exists!`)
+    modPublishRequests.requests[request.requestId] = request
+}
+
+function removeModPublishRequest(request: ModPublishRequest) {
+    delete modPublishRequests.requests[request.requestId]
+}
+
+export async function handleModPublishRequestAction(req: Request) {
+    try {
+        const body = await req.json()
+
+        const token: string = body.token
+        if (!token) throw new Error('missing "token" query parameter')
+
+        const requestId: number = body.requestId
+        if (requestId === undefined) throw new Error('missing "requestId" query parameter')
+
+        const request = modPublishRequests.requests[requestId]
+        if (!request) throw new Error('request with the specified id not found')
+
+        const actionType: ModPublishRequestActionType = body.actionType
+        if (!actionType) throw new Error('missing "actionType" query parameter')
+        if (actionType != 'accept' && actionType != 'reject') throw new Error('invalid "actionType" value')
+
+        const branch = branches[request.branchName]
+
+        const userInfo = await getUserInfo(token, githubUserInfoCache)
+        if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
+
+        const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
+
+        const userPermissions = getPermissionsToActOnModPublishRequest({ request, userInfo, isAdmin })
+        if (!userPermissions[actionType]) throw new Error('user has no permission to perform this action')
+
+        if (actionType == 'accept') {
+            console.log(request.modUrl)
+            const resp = await fetch(request.modUrl)
+            const modArchive = await resp.bytes()
+
+            const modArchiveHash = await sha256(modArchive)
+
+            if (modArchiveHash != request.modArchiveHash) {
+                throw new Error(
+                    'mod archive hash mismatch! did you change the mod archive after submitting the publish request?'
+                )
+            }
+
+            console.log('send commit', request)
+        }
+
+        removeModPublishRequest(request)
+        await saveModPublishRequestsToFile()
+
+        return Response.json(modPublishRequests.requests)
+    } catch (e) {
+        console.error(e)
+        const message = getErrorMessage(e)
+        return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
+    }
 }

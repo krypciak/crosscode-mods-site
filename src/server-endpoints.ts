@@ -1,4 +1,4 @@
-import type { ModPublishRequest } from './ccmoddb/mod-publish-request'
+import type { ModPublishRequestActionType, ModPublishRequestsRecord } from './ccmoddb/mod-publish-request'
 
 export async function fetchUltimateCrosscodeTypedefsZip(): Promise<Uint8Array> {
     const resp = await fetch('/ultimate-crosscode-typedefs.zip')
@@ -60,12 +60,26 @@ export async function submitModPublishRequest(args: {
     }
 }
 
-export async function fetchModPublishRequests(): Promise<ModPublishRequest[]> {
-    const resp = await fetch('/get-mod-publish-requests', {
-        method: 'GET',
+export async function fetchModPublishRequests(): Promise<ModPublishRequestsRecord> {
+    const resp = await fetch('/mod-publish-request', { method: 'GET' })
+    if (!resp.ok) throw new Error(`Download failed: ${resp.status} ${resp.statusText}`)
+
+    const json: ModPublishRequestsRecord = await resp.json()
+    return json
+}
+
+export async function sendModPublishRequestAction(args: {
+    token: string
+    requestId: number
+    actionType: ModPublishRequestActionType
+}): Promise<ModPublishRequestsRecord> {
+    const resp = await fetch('/mod-publish-request-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args),
     })
     if (!resp.ok) throw new Error(`Download failed: ${resp.status} ${resp.statusText}`)
 
-    const json: ModPublishRequest[] = await resp.json()
+    const json: ModPublishRequestsRecord = await resp.json()
     return json
 }

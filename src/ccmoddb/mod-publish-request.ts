@@ -4,6 +4,7 @@ import type { Branch } from './branch'
 import { gt } from 'semver'
 
 export interface ModPublishRequest {
+    requestId: number
     userLogin: string
     userName: string
     userAvatarUrl: string
@@ -17,6 +18,9 @@ export interface ModPublishRequest {
     modArchiveHash: string
     submitDate: number
 }
+export type ModPublishRequestsRecord = Record<number, ModPublishRequest>
+
+export type ModPublishRequestActionType = 'accept' | 'reject'
 
 export async function ccmodModPublishCheck({
     ccmod,
@@ -82,6 +86,10 @@ export function getPermissionsToActOnModPublishRequest({
     }
 }
 
-export function hasRequestPendingAlready(requests: ModPublishRequest[], branchName: string, modId: string): boolean {
-    return !!requests.find(request => request.branchName == branchName && request.ccmod.id == modId)
+export function hasRequestPendingAlready(
+    requests: ModPublishRequestsRecord,
+    branchName: string,
+    modId: string
+): boolean {
+    return !!Object.values(requests).find(request => request.branchName == branchName && request.ccmod.id == modId)
 }
