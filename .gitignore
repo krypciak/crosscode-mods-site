@@ -27,3 +27,4 @@ secrets.json
 .env
 nginx/tmp
 mod-publish-requests.json
+CCModDB

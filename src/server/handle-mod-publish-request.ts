@@ -20,6 +20,7 @@ import type {
     ModPublishRequestsRecord,
 } from '../ccmoddb/mod-publish-request'
 import { readFile, rename, unlink } from 'node:fs/promises'
+import { handleCCModDBAddCommitCheckPush } from './ccmoddb-interface'
 
 import secrets from '../../secrets.json'
 
@@ -198,7 +199,10 @@ export async function handleModPublishRequestAction(req: Request) {
             const userPermissions = getPermissionsToActOnModPublishRequest({ request, userInfo, isAdmin })
             if (!userPermissions[actionType]) throw new Error('user has no permission to perform this action')
 
-            if (actionType == 'accept') {
+            if (actionType == 'reject') {
+                removeModPublishRequest(request)
+                await saveModPublishRequestsToFile()
+            } else if (actionType == 'accept') {
                 const resp = await fetch(request.modUrl)
                 const modArchive = await resp.bytes()
 
@@ -209,12 +213,17 @@ export async function handleModPublishRequestAction(req: Request) {
                         'mod archive hash mismatch! did you change the mod archive after submitting the publish request?'
                     )
                 }
+
+                const res = await handleCCModDBAddCommitCheckPush(branch, request)
+                if (!res.success) {
+                    return Response.json(res.testResults, { status: 409 })
+                }
+
+                removeModPublishRequest(request)
+                await saveModPublishRequestsToFile()
+
+                return Response.json(modPublishRequests.requests)
             }
-
-            removeModPublishRequest(request)
-            await saveModPublishRequestsToFile()
-
-            return Response.json(modPublishRequests.requests)
         } catch (e) {
             console.error(e)
             const message = getErrorMessage(e)

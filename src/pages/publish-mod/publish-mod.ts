@@ -156,7 +156,13 @@ async function publish(): Promise<void> {
 
     try {
         if (!currentCCMod) throw new Error('currentCCMod undefined somehow?')
-        await submitModPublishRequest({ token, modId: currentCCMod.id, url: modUrl, branch: branch.getName(), source })
+        await submitModPublishRequest({
+            token,
+            modId: currentCCMod.id,
+            url: modUrl,
+            branch: branch.getName(),
+            source,
+        })
     } catch (e) {
         con.append('[error]', 'server error:', getErrorMessage(e))
         return
@@ -404,7 +410,13 @@ async function onModPublishRequestAction(request: ModPublishRequest, actionType:
     }
 
     try {
-        requests = await sendModPublishRequestAction({ requestId: request.requestId, token, actionType })
+        const res = await sendModPublishRequestAction({ requestId: request.requestId, token, actionType })
+        if (res.success) {
+            requests = res.requests
+        } else {
+            con.append('[error]', res.testResults.text)
+            con.append('[error]', 'ccmoddb test status code:', res.testResults.exitCode)
+        }
     } catch (e) {
         con.append('[error]', 'server error:', getErrorMessage(e))
     }

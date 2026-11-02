@@ -20,6 +20,7 @@ export function getCCModJsonFileFromUnzippedModArchive(
     } else {
         let keys = Object.keys(unzipped)
         if (source) keys = keys.filter(k => k.startsWith(source!))
+        keys.sort((a, b) => a.length - b.length)
         path = keys.find(p => p.replace(/\\/g, '/').split('/').pop() === 'ccmod.json')
         if (!path) throw new Error('no ccmod.json found in mod archive')
 

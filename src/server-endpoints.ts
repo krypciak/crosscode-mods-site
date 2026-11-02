@@ -1,4 +1,5 @@
 import type { ModPublishRequestActionType, ModPublishRequestsRecord } from './ccmoddb/mod-publish-request'
+import type { CCModDBTestResults } from './server/ccmoddb-interface'
 
 export async function fetchUltimateCrosscodeTypedefsZip(): Promise<Uint8Array> {
     const resp = await fetch('/ultimate-crosscode-typedefs.zip')
@@ -72,14 +73,24 @@ export async function sendModPublishRequestAction(args: {
     token: string
     requestId: number
     actionType: ModPublishRequestActionType
-}): Promise<ModPublishRequestsRecord> {
+}): Promise<
+    { success: true; requests: ModPublishRequestsRecord } | { success: false; testResults: CCModDBTestResults }
+> {
     const resp = await fetch('/mod-publish-request-action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(args),
     })
-    if (!resp.ok) throw new Error(`Download failed: ${resp.status} ${resp.statusText}`)
 
-    const json: ModPublishRequestsRecord = await resp.json()
-    return json
+    if (!resp.ok) {
+        if (resp.status == 409) {
+            const json: CCModDBTestResults = await resp.json()
+            return { success: false, testResults: json }
+        }
+
+        throw new Error(`Download failed: ${resp.status} ${resp.statusText}`)
+    }
+
+    const requests: ModPublishRequestsRecord = await resp.json()
+    return { success: true, requests }
 }
