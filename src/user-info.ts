@@ -21,14 +21,16 @@ async function fetchUserInfo(token: string): Promise<GithubUserInfo> {
 
 export async function getUserInfo(
     token: string,
-    cache: KeyValueStore<'github_user', GithubUserInfo>
+    cache: KeyValueStore<string, GithubUserInfo>,
+    cacheKey?: string
 ): Promise<GithubUserInfo | undefined> {
-    let info = cache.get('github_user')
+    cacheKey ??= await sha256(token)
+    let info = cache.get(cacheKey)
     if (info) return info
 
     try {
         info = await fetchUserInfo(token)
-        cache.set('github_user', info)
+        cache.set(cacheKey, info)
         return info
     } catch (error) {
         console.error('fetching user info failed:', error)

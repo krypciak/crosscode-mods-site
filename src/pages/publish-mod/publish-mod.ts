@@ -125,7 +125,7 @@ async function check(): Promise<boolean> {
     if (!token) return false
 
     try {
-        const userInfo = await getUserInfo(token, githubUserInfoCache)
+        const userInfo = await getUserInfo(token, githubUserInfoCache, 'github_user')
         if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
 
         const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
@@ -221,7 +221,9 @@ function updateRequetsUi() {
 
     const branchPermissions: Record<string, ModPublishRequestActPermissions> = {}
     const tokenPromise = getGithubToken()
-    const userInfoPromise = tokenPromise.then(token => (token ? getUserInfo(token, githubUserInfoCache) : undefined))
+    const userInfoPromise = tokenPromise.then(token =>
+        token ? getUserInfo(token, githubUserInfoCache, 'github_user') : undefined
+    )
     const getBranchPermissions = async (request: ModPublishRequest) => {
         const token = await tokenPromise
         const userInfo = await userInfoPromise
