@@ -22,8 +22,6 @@ import type {
 import { readFile, rename, unlink } from 'node:fs/promises'
 import { handleCCModDBAddCommitCheckPush } from './ccmoddb-interface'
 
-import secrets from '../../secrets.json'
-
 const githubUserInfoCache = new KeyValueStoreInMemory<string, GithubUserInfo>(1000 * 60 * 60 * 8)
 const githubRepoInfoCache = new KeyValueStoreInMemory<string, GithubRepoInfo>(1000 * 60 * 60 * 8)
 
@@ -34,11 +32,6 @@ interface ModPublishRequestsFile {
 
 const requestsFile = './mod-publish-requests.json'
 const modPublishRequests: ModPublishRequestsFile = await readRequestsFromDisk()
-
-const branchTokens: Record<string, string> = secrets.githubBranchTokens
-for (const branchName in branches) {
-    if (!branchTokens[branchName]) console.warn('warn: branch', branchName, 'has no github token configured')
-}
 
 let actionRequestQueue: Promise<void> = Promise.resolve()
 
@@ -216,7 +209,8 @@ export async function handleModPublishRequestAction(req: Request): Promise<Respo
 
                 const res = await handleCCModDBAddCommitCheckPush(branch, request)
                 if (!res.success) {
-                    return Response.json(res.testResults, { status: 409 })
+                    if (res.testResults) return Response.json(res.testResults, { status: 409 })
+                    throw res.error
                 }
 
                 removeModPublishRequest(request)

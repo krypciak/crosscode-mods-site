@@ -1,5 +1,4 @@
 import type { ModPublishRequestActionType, ModPublishRequestsRecord } from './ccmoddb/mod-publish-request'
-import type { CCModDBTestResults } from './server/ccmoddb-interface'
 
 export async function fetchUltimateCrosscodeTypedefsZip(): Promise<Uint8Array> {
     const resp = await fetch('/ultimate-crosscode-typedefs.zip')
@@ -67,6 +66,11 @@ export async function fetchModPublishRequests(): Promise<ModPublishRequestsRecor
 
     const json: ModPublishRequestsRecord = await resp.json()
     return json
+}
+
+export interface CCModDBTestResults {
+    exitCode: number
+    text: string
 }
 
 export async function sendModPublishRequestAction(args: {

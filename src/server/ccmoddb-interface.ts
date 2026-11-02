@@ -5,6 +5,12 @@ import type { InputLocation, InputLocations, PackageDB } from 'ccmoddb/build/src
 import type { ModPublishRequest } from '../ccmoddb/mod-publish-request'
 
 import secrets from '../../secrets.json'
+import type { CCModDBTestResults } from '../server-endpoints'
+
+const branchTokens: Record<string, string> = secrets.githubBranchTokens
+for (const branchName in branches) {
+    if (!branchTokens[branchName]) console.warn('warn: branch', branchName, 'has no github token configured')
+}
 
 async function fileExists(path: string) {
     return !!(await stat(path).catch(_ => false))
@@ -86,14 +92,7 @@ async function setupRepoIfNecessary() {
     return (repoSetupPromise ??= setupRepo())
 }
 
-export interface CCModDBTestResults {
-    exitCode: number
-    text: string
-}
-
 async function runCCModDBTest(branch: Branch): Promise<CCModDBTestResults> {
-    await setupRepoIfNecessary()
-
     const res = await $`bun test 2>&1`
         .cwd(repoDir)
         .env({ FORCE_COLOR: '1', BRANCH: branch.config.branch })
@@ -105,7 +104,6 @@ async function runCCModDBTest(branch: Branch): Promise<CCModDBTestResults> {
 }
 
 async function readGit(branch: string, file: string): Promise<string> {
-    await setupRepoIfNecessary()
     return $`git show ${branch}:${file}`.cwd(repoDir).text()
 }
 
@@ -175,7 +173,7 @@ function addOrUpdateLocation(locations: InputLocations, request: ModPublishReque
             }
         }
     } else {
-        loc.url = request.ccmod.id
+        loc.url = request.modUrl
         loc.source = request.source
         loc.changed = true
     }
@@ -185,8 +183,9 @@ async function runCCModDBStart(branch: Branch) {
     try {
         const text = await $`bun run --silent start`
             .cwd(repoDir)
-            .env({ BRANCH: branch.config.branch, GITHUB_TOKEN: secrets.githubGeneralReadOnlyToken })
+            .env({ ...process.env, BRANCH: branch.config.branch, GITHUB_TOKEN: secrets.githubGeneralReadOnlyToken })
             .text()
+
         await $`git add -A`.cwd(repoDir)
         await $`git commit --amend --no-edit`.cwd(repoDir)
 
@@ -197,12 +196,21 @@ async function runCCModDBStart(branch: Branch) {
     }
 }
 
+async function pushCommit(branch: Branch) {
+    const token = branchTokens[branch.getName()] ?? 'bad_token'
+    const url = `https://${token}@github.com/${branch.config.owner}/${branch.config.repoName}`
+    await $`git push ${url} ${branch.config.branch}:${branch.config.branch}`.cwd(repoDir)
+}
+
 export async function handleCCModDBAddCommitCheckPush(
     branch: Branch,
     request: ModPublishRequest
-): Promise<{ success: true } | { success: false; testResults?: CCModDBTestResults }> {
+): Promise<{ success: true } | { success: false; error: unknown; testResults?: CCModDBTestResults }> {
     console.log('=== handleCCModDBAddCommitCheckPush ===')
     console.log('branch:', branch.getName(), 'modUrl:', request.modUrl)
+
+    await setupRepoIfNecessary()
+
     const inputLocations = await readInputLocations(branch)
 
     addOrUpdateLocation(inputLocations, request)
@@ -218,18 +226,15 @@ export async function handleCCModDBAddCommitCheckPush(
         await runCCModDBStart(branch)
 
         testResults = await runCCModDBTest(branch)
-        if (testResults.exitCode != 0) {
-            try {
-            } catch (e) {
-                console.error(e)
-            }
-        }
-    } catch (e) {
+        if (testResults.exitCode != 0) throw new Error('tests didnt pass')
+
+        await pushCommit(branch)
+    } catch (error) {
         try {
             await $`git checkout ${branch.config.branch}`.cwd(repoDir)
             await $`git reset --hard @{u}`.cwd(repoDir)
         } finally {
-            return { success: false, testResults }
+            return { success: false, error, testResults }
         }
     } finally {
         await $`git checkout ${masterBranch}`.cwd(repoDir)
