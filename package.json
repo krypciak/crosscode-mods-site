@@ -19,7 +19,7 @@
         "@codemirror/view": "^6.43.15",
         "@octokit/types": "^18.0.0",
         "@types/bun": "^1.4.4",
-        "@types/node": "^26.6.5",
+        "@types/node": "^26.6.6",
         "ccmoddb": "CCDirectLink/CCModDB",
         "codemirror": "^6.0.2",
         "crosscode-typedef-inserter": "krypciak/crosscode-typedef-inserter",
