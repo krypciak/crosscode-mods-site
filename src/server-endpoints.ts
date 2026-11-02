@@ -88,7 +88,7 @@ export async function sendModPublishRequestAction(args: {
             return { success: false, testResults: json }
         }
 
-        throw new Error(`Download failed: ${resp.status} ${resp.statusText}`)
+        throw new Error(`Request failed: ${resp.status} ${resp.statusText}`)
     }
 
     const requests: ModPublishRequestsRecord = await resp.json()

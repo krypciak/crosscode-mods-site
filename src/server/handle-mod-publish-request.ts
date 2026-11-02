@@ -171,7 +171,7 @@ function actionRequestEnqueue<T>(task: () => Promise<T>): Promise<T> {
     return run
 }
 
-export async function handleModPublishRequestAction(req: Request) {
+export async function handleModPublishRequestAction(req: Request): Promise<Response> {
     return actionRequestEnqueue(async () => {
         try {
             const body = await req.json()
@@ -221,9 +221,9 @@ export async function handleModPublishRequestAction(req: Request) {
 
                 removeModPublishRequest(request)
                 await saveModPublishRequestsToFile()
-
-                return Response.json(modPublishRequests.requests)
             }
+
+            return Response.json(modPublishRequests.requests)
         } catch (e) {
             console.error(e)
             const message = getErrorMessage(e)
