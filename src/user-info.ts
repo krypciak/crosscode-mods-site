@@ -57,7 +57,7 @@ export async function getRepoInfo(
     repo: string,
     cache: KeyValueStore<string, GithubRepoInfo>
 ): Promise<GithubRepoInfo | undefined> {
-    const cacheKey = sha256(token) + '/' + owner + '/' + repo
+    const cacheKey = (await sha256(token)) + '/' + owner + '/' + repo
     let info = cache.get(cacheKey)
     if (info) return info
 

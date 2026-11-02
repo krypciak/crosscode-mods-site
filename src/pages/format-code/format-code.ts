@@ -71,7 +71,7 @@ downloadBtn.addEventListener('click', () => {
 runBtn.addEventListener('click', () => run())
 
 async function getInputCodeCacheKey(code: string): Promise<string> {
-    return lebabCodeCacheKey + '_' + sha256(code)
+    return lebabCodeCacheKey + '_' + (await sha256(code))
 }
 
 async function getInputCode(inputCode: string, hash: string) {
