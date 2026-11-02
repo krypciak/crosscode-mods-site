@@ -1,4 +1,4 @@
-import { githubClientId } from './config'
+import { githubClientId } from './auth'
 import { getGithubToken, isLoggedIn, logoutGithub } from './auth'
 import { setOAuthState, setPkceChallenge } from './auth-security'
 import { getUserInfo, type GithubUserInfo } from './user-info'

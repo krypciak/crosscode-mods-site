@@ -1,8 +1,9 @@
-import { githubClientId } from './config'
 import { takePkceVerifier, verifyOAuthState } from './auth-security'
 import { KeyValueStoreLocalStorage } from './cache'
 import { fetchProxiedAccessToken, type GithubTokenRequestSuccess } from './server-endpoints'
 import { githubRepoInfoCache, githubUserInfoCache } from './ui-common'
+
+export const githubClientId = 'Iv23lioC4ETltVoa62Dr'
 
 type StoredAuthData = { acquiredAt: number } & GithubTokenRequestSuccess
 
