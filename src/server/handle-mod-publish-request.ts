@@ -22,6 +22,7 @@ import type {
 import { readFile, rename, unlink } from 'node:fs/promises'
 import { handleCCModDBAddCommitCheckPush } from './ccmoddb-interface'
 import { checkModArchiveUrl } from './handle-github-download'
+import { isUserInTheAllowedUsersList } from './allowed-users'
 
 const githubUserInfoCache = new KeyValueStoreInMemory<string, GithubUserInfo>(1000 * 60 * 60 * 8)
 const githubRepoInfoCache = new KeyValueStoreInMemory<string, GithubRepoInfo>(1000 * 60 * 60 * 8)
@@ -42,6 +43,14 @@ export async function handleGetModPublishRequests(_req: Request) {
     } catch (e) {
         const message = getErrorMessage(e)
         return new Response(message, { status: 400, headers: { 'Content-Type': 'text/plain' } })
+    }
+}
+
+function checkIfUserIsInTheAllowedUsersList(login: string) {
+    if (!isUserInTheAllowedUsersList(login)) {
+        throw new Error(
+            'You have no permission to publish a mod! Ask for permission on the crosscode modding discord server'
+        )
     }
 }
 
@@ -71,6 +80,7 @@ export async function handleModPublishRequest(req: Request) {
 
         const userInfo = await getUserInfo(token, githubUserInfoCache)
         if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
+        checkIfUserIsInTheAllowedUsersList(userInfo.login)
         const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
 
         checkModArchiveUrl(modUrl)
@@ -188,7 +198,7 @@ export async function handleModPublishRequestAction(req: Request): Promise<Respo
 
             const userInfo = await getUserInfo(token, githubUserInfoCache)
             if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
-
+            checkIfUserIsInTheAllowedUsersList(userInfo.login)
             const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
 
             const userPermissions = getPermissionsToActOnModPublishRequest({ request, userInfo, isAdmin })

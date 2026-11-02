@@ -36,8 +36,7 @@ export async function handleGithubDownload(req: Request) {
         headers.set('Content-Type', upstream.headers.get('Content-Type') ?? 'application/octet-stream')
         if (upstream.headers.get('Content-Disposition'))
             headers.set('Content-Disposition', upstream.headers.get('Content-Disposition')!)
-        /* TODO: set to no cache!! */
-        // headers.set('Cache-Control', 'no-store')
+        headers.set('Cache-Control', 'no-store')
         headers.set('Cache-Control', 'max-age=604800')
         headers.set('X-Github-Status', String(upstream.status))
 
