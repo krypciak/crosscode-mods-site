@@ -21,6 +21,7 @@ import type {
 } from '../ccmoddb/mod-publish-request'
 import { readFile, rename, unlink } from 'node:fs/promises'
 import { handleCCModDBAddCommitCheckPush } from './ccmoddb-interface'
+import { checkModArchiveUrl } from './handle-github-download'
 
 const githubUserInfoCache = new KeyValueStoreInMemory<string, GithubUserInfo>(1000 * 60 * 60 * 8)
 const githubRepoInfoCache = new KeyValueStoreInMemory<string, GithubRepoInfo>(1000 * 60 * 60 * 8)
@@ -68,6 +69,11 @@ export async function handleModPublishRequest(req: Request) {
         const branch = branches[branchName]
         if (!branch) throw new Error('unknown branch')
 
+        const userInfo = await getUserInfo(token, githubUserInfoCache)
+        if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
+        const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
+
+        checkModArchiveUrl(modUrl)
         const resp = await fetch(modUrl)
         const modArchive = await resp.bytes()
 
@@ -79,10 +85,6 @@ export async function handleModPublishRequest(req: Request) {
         const { ccmod } = await ccmodCheck({ ccmodText, branch })
 
         if (ccmod.id != modId) throw new Error('submitted mod archive has different mod id than the request one')
-
-        const userInfo = await getUserInfo(token, githubUserInfoCache)
-        if (!userInfo) throw new Error('user info fetch failed, invalid github token?')
-        const isAdmin = await isUserAdmin(token, branch, githubRepoInfoCache)
 
         const { highestVersionPackage } = await ccmodModPublishCheck({ ccmod, branch, userInfo, isAdmin })
 
@@ -196,6 +198,7 @@ export async function handleModPublishRequestAction(req: Request): Promise<Respo
                 removeModPublishRequest(request)
                 await saveModPublishRequestsToFile()
             } else if (actionType == 'accept') {
+                checkModArchiveUrl(request.modUrl)
                 const resp = await fetch(request.modUrl)
                 const modArchive = await resp.bytes()
 

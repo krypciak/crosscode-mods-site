@@ -8,23 +8,28 @@ import { getErrorMessage } from '../error-msg'
 //  https://github.com/CCDirectLink/Blades/archive/1.6.0.zip
 const allowedDownloadPattern = /^\/[^/]+\/[^/]+\/(archive\/|releases\/download\/)/
 
+export function checkModArchiveUrl(url: string) {
+    let target: URL
+    try {
+        target = new URL(url)
+    } catch {
+        throw new Error('invalid url')
+    }
+
+    if (target.protocol != 'https:' || target.hostname != 'github.com')
+        throw new Error('only https://github.com urls are allowed')
+    if (!allowedDownloadPattern.test(target.pathname))
+        throw new Error('only github archive or releases/download urls are allowed')
+
+    return target
+}
+
 export async function handleGithubDownload(req: Request) {
     try {
         const urlParam = new URL(req.url).searchParams.get('url')
         if (!urlParam) throw new Error('missing "url" query parameter')
 
-        let target: URL
-        try {
-            target = new URL(urlParam)
-        } catch {
-            throw new Error('invalid url')
-        }
-
-        if (target.protocol != 'https:' || target.hostname != 'github.com')
-            throw new Error('only https://github.com urls are allowed')
-        if (!allowedDownloadPattern.test(target.pathname))
-            throw new Error('only github archive or releases/download urls are allowed')
-
+        const target = checkModArchiveUrl(urlParam)
         const upstream = await fetch(target, { redirect: 'follow' })
 
         const headers = new Headers()
