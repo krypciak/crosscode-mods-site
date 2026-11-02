@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-secrets.json
+config.json
 .env
 nginx/tmp
 mod-publish-requests.json
