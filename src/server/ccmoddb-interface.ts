@@ -4,10 +4,9 @@ import { $ } from 'bun'
 import type { InputLocation, InputLocations, PackageDB } from 'ccmoddb/build/src/types'
 import type { ModPublishRequest } from '../ccmoddb/mod-publish-request'
 import type { CCModDBTestResults } from '../server-endpoints'
+import { serverConfig } from './server-config'
 
-import config from '../../config.json'
-
-const branchTokens: Record<string, string> = config.githubBranchTokens
+const branchTokens: Record<string, string> = serverConfig.githubBranchTokens
 for (const branchName in branches) {
     if (!branchTokens[branchName]) console.warn('warn: branch', branchName, 'has no github token configured')
 }
@@ -182,7 +181,11 @@ async function runCCModDBStart(branch: Branch, changedModIds: string[]) {
     try {
         const text = await $`bun run --silent start '${changedModIds.join(',')}'`
             .cwd(repoDir)
-            .env({ ...process.env, BRANCH: branch.config.branch, GITHUB_TOKEN: config.githubGeneralReadOnlyToken })
+            .env({
+                ...process.env,
+                BRANCH: branch.config.branch,
+                GITHUB_TOKEN: serverConfig.githubGeneralReadOnlyToken,
+            })
             .text()
 
         await $`git add -A`.cwd(repoDir)

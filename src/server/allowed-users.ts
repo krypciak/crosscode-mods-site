@@ -1,6 +1,6 @@
-import config from '../../config.json'
+import { serverConfig } from './server-config'
 
-const allowedUsers: string[] = config.allowedUsers
+const allowedUsers: string[] = serverConfig.allowedUsers
 export function isUserInTheAllowedUsersList(username: string) {
     return allowedUsers.includes(username)
 }
