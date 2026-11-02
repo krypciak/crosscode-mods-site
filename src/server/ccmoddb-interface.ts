@@ -12,21 +12,19 @@ for (const branchName in branches) {
     if (!branchTokens[branchName]) console.warn('warn: branch', branchName, 'has no github token configured')
 }
 
+const repoDir = './CCModDB'
+const fetchRepoUpdatesFromInternet = true
+const masterBranch = 'master'
+
 async function fileExists(path: string) {
     return !!(await stat(path).catch(_ => false))
 }
 
 let repoSetupPromise: Promise<void>
-const repoDir = './CCModDB'
 
 function getRemoteUrlOfBranch(branch: Branch): string {
     return `https://github.com/${branch.config.owner}/${branch.config.repoName}.git`
 }
-
-/* TODO: change me */
-const fetchRepoUpdatesFromInternet = false
-
-const masterBranch = 'master'
 
 async function setupRepo() {
     console.log('setting up repo')
