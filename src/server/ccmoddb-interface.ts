@@ -3,9 +3,9 @@ import { Branch, branches } from '../ccmoddb/branch'
 import { $ } from 'bun'
 import type { InputLocation, InputLocations, PackageDB } from 'ccmoddb/build/src/types'
 import type { ModPublishRequest } from '../ccmoddb/mod-publish-request'
+import type { CCModDBTestResults } from '../server-endpoints'
 
 import secrets from '../../secrets.json'
-import type { CCModDBTestResults } from '../server-endpoints'
 
 const branchTokens: Record<string, string> = secrets.githubBranchTokens
 for (const branchName in branches) {
@@ -112,21 +112,6 @@ async function readInputLocations(branch: Branch): Promise<InputLocations> {
     return JSON.parse(await readGit(branch.config.branch, inputLocationsPath))
 }
 
-function stringifyInputLocations(locations: InputLocations) {
-    function stringifyLocation(loc: InputLocation) {
-        const body = Object.entries(loc)
-            .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
-            .join(', ')
-        return '{ ' + body + ' }'
-    }
-
-    const pad = ' '.repeat(4)
-    const body = Object.entries(locations)
-        .map(([k, v]) => `${pad}${JSON.stringify(k)}: ${stringifyLocation(v)}`)
-        .join(',\n')
-    return `{\n${body}\n}`
-}
-
 async function writeInputLocationsAndCommit(
     branch: Branch,
     locations: InputLocations,
@@ -143,10 +128,25 @@ async function writeInputLocationsAndCommit(
     }
 }
 
-function addOrUpdateLocation(locations: InputLocations, request: ModPublishRequest) {
+function stringifyLocation(loc: InputLocation) {
+    const body = Object.entries(loc)
+        .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
+        .join(', ')
+    return '{ ' + body + ' }'
+}
+
+function stringifyInputLocations(locations: InputLocations) {
+    const pad = ' '.repeat(4)
+    const body = Object.entries(locations)
+        .map(([k, v]) => `${pad}${JSON.stringify(k)}: ${stringifyLocation(v)}`)
+        .join(',\n')
+    return `{\n${body}\n}`
+}
+
+function addOrUpdateLocation(locations: InputLocations, request: ModPublishRequest): string[] {
     const loc = locations[request.ccmod.id]
     // shouldnt happen
-    if (loc.type && loc.type != 'zip') return
+    if (loc.type && loc.type != 'zip') return []
 
     if (request.ccmod.id == 'ccloader') {
         // example url:
@@ -156,14 +156,14 @@ function addOrUpdateLocation(locations: InputLocations, request: ModPublishReque
             .slice(0, -'.zip'.length) // 2.25.0/v2.14.2
         const [cclV, simpV] = versionSubStr.split('/')
 
-        for (const modId of ['ccloader', 'Simplify', 'CCLoader display version']) {
+        const modIds = ['ccloader', 'Simplify', 'CCLoader display version']
+        for (const modId of modIds) {
             const loc = locations[modId]
             if (!loc) continue
 
             if (loc.type && loc.type != 'zip') continue
 
             loc.url = request.modUrl
-            loc.changed = true
 
             for (const key of ['source', 'ccmodPath'] as const) {
                 const val = loc[key]
@@ -172,16 +172,17 @@ function addOrUpdateLocation(locations: InputLocations, request: ModPublishReque
                 loc[key] = `CCLoader-${cclV}-${simpV}${val.substring(restI == -1 ? 10e10 : restI)}`
             }
         }
+        return modIds
     } else {
         loc.url = request.modUrl
         loc.source = request.source
-        loc.changed = true
+        return [request.ccmod.id]
     }
 }
 
-async function runCCModDBStart(branch: Branch) {
+async function runCCModDBStart(branch: Branch, changedModIds: string[]) {
     try {
-        const text = await $`bun run --silent start`
+        const text = await $`bun run --silent start '${changedModIds.join(',')}'`
             .cwd(repoDir)
             .env({ ...process.env, BRANCH: branch.config.branch, GITHUB_TOKEN: secrets.githubGeneralReadOnlyToken })
             .text()
@@ -213,7 +214,7 @@ export async function handleCCModDBAddCommitCheckPush(
 
     const inputLocations = await readInputLocations(branch)
 
-    addOrUpdateLocation(inputLocations, request)
+    const changedModIds = addOrUpdateLocation(inputLocations, request)
 
     let testResults: CCModDBTestResults | undefined
     try {
@@ -223,7 +224,7 @@ export async function handleCCModDBAddCommitCheckPush(
             `Mod: ${request.ccmod.id} ${request.ccmod.version!} (#${request.requestId})`
         )
 
-        await runCCModDBStart(branch)
+        await runCCModDBStart(branch, changedModIds)
 
         testResults = await runCCModDBTest(branch)
         if (testResults.exitCode != 0) throw new Error('tests didnt pass')
