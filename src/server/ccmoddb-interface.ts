@@ -200,7 +200,7 @@ async function runCCModDBStart(branch: Branch, changedModIds: string[]) {
 
 async function pushCommit(branch: Branch) {
     const token = branchTokens[branch.getName()] ?? 'bad_token'
-    const url = `https://${token}@github.com/${branch.config.owner}/${branch.config.repoName}`
+    const url = `https://x-access-token:${token}@github.com/${branch.config.owner}/${branch.config.repoName}`
     await $`git push ${url} ${branch.config.branch}:${branch.config.branch}`.cwd(repoDir)
 }
 
