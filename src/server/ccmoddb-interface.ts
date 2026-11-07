@@ -141,9 +141,9 @@ function stringifyInputLocations(locations: InputLocations) {
 }
 
 function addOrUpdateLocation(locations: InputLocations, request: ModPublishRequest): string[] {
-    const loc = locations[request.ccmod.id]
+    const loc = (locations[request.ccmod.id] ??= { url: '' })
     // shouldnt happen
-    if (loc.type && loc.type != 'zip') return []
+    if (loc?.type && loc.type != 'zip') return []
 
     if (request.ccmod.id == 'ccloader') {
         // example url:
