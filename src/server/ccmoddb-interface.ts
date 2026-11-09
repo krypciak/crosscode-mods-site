@@ -90,6 +90,7 @@ async function setupRepoIfNecessary() {
 }
 
 async function runCCModDBTest(branch: Branch): Promise<CCModDBTestResults> {
+    console.log('running CCModDB test')
     const res = await $`bun test 2>&1`
         .cwd(repoDir)
         .env({ FORCE_COLOR: '1', BRANCH: branch.config.branch })
@@ -178,6 +179,7 @@ function addOrUpdateLocation(locations: InputLocations, request: ModPublishReque
 }
 
 async function runCCModDBStart(branch: Branch, changedModIds: string[]) {
+    console.log('running CCModDB start')
     try {
         const text = await $`bun run --silent start '${changedModIds.join(',')}'`
             .cwd(repoDir)
@@ -199,6 +201,7 @@ async function runCCModDBStart(branch: Branch, changedModIds: string[]) {
 }
 
 async function pushCommit(branch: Branch) {
+    console.log('pushing commit')
     const token = branchTokens[branch.getName()] ?? 'bad_token'
     const url = `https://x-access-token:${token}@github.com/${branch.config.owner}/${branch.config.repoName}`
     await $`git push ${url} ${branch.config.branch}:${branch.config.branch}`.cwd(repoDir)
