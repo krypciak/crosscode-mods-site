@@ -9,6 +9,7 @@ import {
 Bun.serve({
     port: 4895,
     hostname: '127.0.0.1',
+    idleTimeout: 3 * 60,
     routes: {
         '/access_token': { POST: handleAccessToken },
         '/gh': { GET: handleGithubDownload },
